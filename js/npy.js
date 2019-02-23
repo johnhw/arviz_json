@@ -32,7 +32,7 @@ var NumpyLoader = (function () {
     
       // Intepret the bytes according to the specified dtype
       var data;
-      console.log(info.descr);
+      
       if (info.descr === "|u1") {
           data = new Uint8Array(buf, offsetBytes);
       } 

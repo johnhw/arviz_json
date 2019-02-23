@@ -1,9 +1,35 @@
 import arviz as az
 import numpy as np
 import json
+import zipfile
+
+def write_for_js(output_name, header, arrays, compressed=True, verbose=False):
+    """Write the data to a JSON file for loading in JS, along with
+    the NPZ file containing the arrays"""
+    # dump the ararys to the file output    
+    npz_file = f"{output_name}.npz"
+    if compressed:
+        np.savez_compressed(npz_file, **arrays)
+    else:
+        np.savez(npz_file, **arrays)
+
+    # write JSON to the npz file:
+    output = {"inference_data": header}
+
+    z = zipfile.ZipFile(npz_file, "a")    
+    if compressed:
+        z.writestr("header.json", json.dumps(output), zipfile.ZIP_STORED)
+    else:
+        z.writestr("header.json", json.dumps(output), zipfile.ZIP_DEFLATED)
+    if verbose:
+        print("Writing archive file...")
+        z.printdir()
+    z.close()
+
 
 def fix_dtype(data):
-    """Convert the passed object to a numpy array, making sure that the dtype is one of:
+    """Convert the passed object to a numpy array, making sure that the dtype is one of
+       the types that the npy loader supports. This could be one of:
        |u1, |i1, <u2, <u4, <i4, <f4, <f8
     """
     arr = np.array(data)
@@ -25,8 +51,9 @@ def fix_dtype(data):
 
 def arviz_to_json(inference_data, output_name):
     """
-        Take an inference data xarray object, and return a JSON representation
-        that can be loaded client-side.
+        Take an inference data Xarray object, and return a JSON representation
+        that can be loaded client-side, along with an NPZ file that holds the
+        array data.
 
         Writes:
 
@@ -41,6 +68,7 @@ def arviz_to_json(inference_data, output_name):
 
     """
 
+    # standard arviz groups
     arviz_groups = [
         "observed_data",
         "posterior",
@@ -76,11 +104,8 @@ def arviz_to_json(inference_data, output_name):
 
         array_headers[group_name] = header
 
-    json_block = {"inference_data": array_headers}
-    with open(f"{output_name}.json", "w") as f:
-        json.dump(json_block, f)
-    np.savez(f"{output_name}.npz", **arrays)
-
+    write_for_js(output_name, array_headers, arrays)
+    
 
 if __name__ == "__main__":
     import arviz as az
