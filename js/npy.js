@@ -32,8 +32,12 @@ var NumpyLoader = (function () {
     
       // Intepret the bytes according to the specified dtype
       var data;
+      console.log(info.descr);
       if (info.descr === "|u1") {
           data = new Uint8Array(buf, offsetBytes);
+      } 
+      else if (info.descr === "|b1") {
+        data = new Uint8Array(buf, offsetBytes);      
       } else if (info.descr === "|i1") {
           data = new Int8Array(buf, offsetBytes);
       } else if (info.descr === "<u2") {
@@ -44,6 +48,8 @@ var NumpyLoader = (function () {
           data = new Uint32Array(buf, offsetBytes);
       } else if (info.descr === "<i4") {
           data = new Int32Array(buf, offsetBytes);
+      } else if (info.descr === "<i8") {
+            data = new Int64Array(buf, offsetBytes);
       } else if (info.descr === "<f4") {
           data = new Float32Array(buf, offsetBytes);
       } else if (info.descr === "<f8") {
