@@ -87,6 +87,7 @@ def arviz_to_json(inference_data, output_name):
             "dims": dict(group.dims),
             "coords": {k: [i.item() for i in v] for k, v in group.coords.items()},
             "vars": {},
+            "array_names":{}
         }
         for var, var_data in group.data_vars.items():
             # ensure each array has a unique filename
@@ -101,6 +102,7 @@ def arviz_to_json(inference_data, output_name):
                 "array_name": array_name,
             }
             arrays[array_name] = fix_dtype(var_data.data)
+            header["array_names"][var] = array_name
 
         array_headers[group_name] = header
 

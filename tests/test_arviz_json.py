@@ -76,7 +76,8 @@ def test_extract_dag():
     # test empty model
     dag = get_dag(model)
     assert(len(dag)==0)
-
+    
+    # 3 basic variables
     with model:
         left_slope = pm.Normal("left_slope", mu=0, sd=0.5)
         right_slope = pm.Normal("right_slope", mu=0, sd=0.5)

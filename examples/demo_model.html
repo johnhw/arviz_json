@@ -1,0 +1,178 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>NPZ loader test</title>
+
+    <head>
+        <script src="../js/zip/zip.js"></script>
+        <script src="../js/zip/zip-ext.js"></script>
+        <script src="../js/zip/inflate.js"></script>
+        <script src="../js/npy.js"></script>
+        <script src="../js/npz.js"></script>
+        <script src="../js/arviz.js"></script>
+        <script>
+        </script>
+    </head>
+
+<body>
+    <svg></svg>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+
+    <script>
+        function drawChart(arviz_data) {
+            console.log(arviz_data);
+
+            // select
+            var raw_data = {
+                "date": arviz_data.arrays.observed_data_year_0.data,
+                "value": arviz_data.arrays.observed_data_y_1.data
+            }
+
+            // transpose
+            var data = [];
+            for (var i = 0; i < raw_data.date.length; i++) {
+                data.push({
+                    "date": raw_data.date[i] + 1960,
+                    "value": raw_data.value[i] + 50.0,
+                })
+            }
+            console.log(data);
+
+            // create canvas
+            var svgWidth = 1000,
+                svgHeight = 400;
+            var margin = {
+                top: 20,
+                right: 20,
+                bottom: 30,
+                left: 50
+            };
+            var width = svgWidth - margin.left - margin.right;
+            var height = svgHeight - margin.top - margin.bottom;
+            var svg = d3.select('svg')
+                .attr("width", svgWidth)
+                .attr("height", svgHeight);
+
+
+            // main group for all elements
+            var g = svg.append("g")
+                .attr("transform",
+                    "translate(" + margin.left + "," + margin.top + ")"
+                );
+
+            // construct axis objects
+            var x = d3.scaleLinear().rangeRound([0, width]);
+            var y = d3.scaleLinear().rangeRound([height, 0]);
+
+            // construct the line 
+            var line = d3.line()
+                .x(function (d) {
+                    return x(d.date)
+                })
+                .y(function (d) {
+                    return y(d.value)
+                })
+            x.domain(d3.extent(data, function (d) {
+                return d.date;
+            }));
+            y.domain([0, 100]);
+
+            // add axis guides
+            g.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x))
+                .select(".domain")
+                .remove();
+
+
+            g.append("g")
+                .call(d3.axisLeft(y))
+                .append("text")
+                .attr("fill", "#000")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", "0.71em")
+                .attr("text-anchor", "end")
+                .text("Poverty rate");
+
+            g.append("g")
+                .attr("stroke", "steelblue")
+                .attr("stroke-width", 1.5)
+                .attr("fill", "none")
+                .selectAll("circle")
+                .data(data)
+                .enter()
+                .append("circle")
+                .attr("cx", d => x(d.date))
+                .attr("cy", d => y(d.value))
+                .attr("r", 2);
+
+
+
+            function add_sample() {
+                var random_index = Math.floor(Math.random() * arviz_data.arrays.posterior_left_slope_3.data.length);
+                
+                var lslope = arviz_data.arrays.posterior_left_slope_3.data[random_index];
+                var rslope = arviz_data.arrays.posterior_right_slope_4.data[random_index];
+                var rl_switch = arviz_data.arrays.posterior_switchpoint_5.data[random_index] + 1960;
+                var switch_pov = arviz_data.arrays.posterior_poverty_at_switchpoint_2.data[random_index] + 50;
+
+                function map_line(at, slope, from, offset) {
+                    return offset + (at-from) * slope;
+                }
+                
+                var sample_data = [{
+                        date: 1820,
+                        value: map_line(1820, lslope, rl_switch, switch_pov)
+                    },
+                    {
+                        date: rl_switch,
+                        value: map_line(rl_switch, lslope, rl_switch, switch_pov)
+                    },
+                    {
+                        date: 2010,
+                        value: map_line(2010, rslope, rl_switch, switch_pov)
+                    },
+                ];
+
+                d3.selectAll("path").remove();
+                g.append("path")
+                    .datum(sample_data)
+                    .attr("fill", "none")
+                    .attr("stroke", "steelblue")
+                    .attr("stroke-linejoin", "round")
+                    .attr("stroke-linecap", "round")
+                    .attr("stroke-width", 2.5)
+                    .attr("d", line);
+
+                g.append("path")
+                    .datum(sample_data)
+                    .attr("fill", "none")
+                    .attr("stroke", "steelblue")
+                    .attr("stroke-linejoin", "round")
+                    .attr("stroke-linecap", "round")
+                    .attr('stroke-opacity', 0.2)
+                    .attr("stroke-width", 0.5*y(arviz_data.arrays.posterior_sigma_7.data[random_index]+50))
+                    .attr("d", line);
+            }
+
+            add_sample();
+            window.setInterval(function () {
+                /// call your function here
+                add_sample();
+            }, 50);
+        }
+
+        load_npz("switchpoint.npz", function (arviz) {
+            drawChart(arviz)
+        });
+    </script>
+
+
+</body>
+
+</body>
+
+</html>
