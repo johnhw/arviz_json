@@ -109,5 +109,5 @@ def arviz_to_json(inference_data, output_name):
 
 if __name__ == "__main__":
     import arviz as az
-    data = az.load_arviz_data("centered_eight")
+    data = az.load_arviz_data("centered_eight")    
     arviz_to_json(data, "centered_eight")
