@@ -7,7 +7,7 @@ with open("README.md") as f:
 setup(
      name='arviz_json',    # This is the name of your PyPI-package.
      version='0.0.1',                          # Update the version number for new releases
-     packages=['ARViz JSON'],                  # The name of your scipt, and also the command you'll be using for calling it
+     packages=['arviz_json'],                  # The name of your scipt, and also the command you'll be using for calling it
      description = 'An ARViz InferenceData to JSON/npy converter',
      author = 'John H Williamson',
      long_description_content_type="text/markdown",
