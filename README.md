@@ -15,11 +15,9 @@ The module includes functionality to extract a very basic skeleton of the DAG fr
         posterior_predictive = pm.sample_posterior_predictive(trace, predictive_samples, model)
         dag = get_dag(model)
     
-    data = az.from_pymc3(
-        trace=trace, prior=prior, posterior_predictive=posterior_predictive
-    )
+    data = az.from_pymc3(trace=trace, prior=prior, posterior_predictive=posterior_predictive)
 
-    # insert dag into sampler stat attributes
+    # insert variable graph into sampler stat attributes
     data.sample_stats.attrs["graph"] = dag
     arviz_to_json(data, "switchpoint.npz")
 ```    
