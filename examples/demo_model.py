@@ -86,4 +86,4 @@ if __name__=="__main__":
     poverty = load_data()
     model = define_model(poverty)
     data = capture_inference(model)
-    arviz_to_json(data, "switchpoint")
+    arviz_to_json(data, "switchpoint.npz")
