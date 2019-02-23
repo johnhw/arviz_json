@@ -1,0 +1,1 @@
+from arviz.inference_data import inference_data
