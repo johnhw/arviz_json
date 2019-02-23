@@ -85,41 +85,7 @@ var NumpyLoader = (function () {
     return {
         open: open,
         ajax: ajax,
-        from_buffer: fromArrayBuffer
+        fromBuffer: fromArrayBuffer
     };
 })();
 
-
-// Read a concatenated block of NPY files,
-// using a header object that specifies the names and
-// offsets of the arrays to be loaded.
-// Each entry has a name, mapped to a start and end byte offset pair, like:
-// {
-//    "vars":(0,512)
-//    "samples": (512, 4096)
-//    "probabilities": (4096, 12000)
-//}
-var NpyBufferLoader = (function () {
-    function ajax(url, callback, array_blocks) {
-        var xhr = new XMLHttpRequest();
-        xhr.onload = function(e) {
-            var buf = xhr.response;
-            var array_mapping = {};
-            for(var array_name in array_blocks)
-            {
-                var sub_buffer_range = array_blocks[array_name]; // (start, end) pair
-                var sub_buffer = buf.slice(sub_buffer_range[0], sub_buffer_range[1])
-                var ndarray = fromArrayBuffer(sub_buffer);
-                array_mapping[array_name] = ndarray;
-            }
-            
-            callback(array_mapping);
-        };
-        xhr.open("GET", url, true);
-        xhr.responseType = "arraybuffer";
-        xhr.send(null);
-    }
-    return {        
-        ajax: ajax,        
-    };
-});
