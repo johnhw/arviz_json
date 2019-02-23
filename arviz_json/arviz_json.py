@@ -3,24 +3,26 @@ import numpy as np
 import json
 import zipfile
 
-def write_for_js(output_name, header, arrays, compressed=True, verbose=False):
+def write_for_js(npz_file, header, arrays, compressed=True, verbose=False):
     """Write the data to a JSON file for loading in JS, along with
     the NPZ file containing the arrays"""
-    # dump the ararys to the file output    
-    npz_file = f"{output_name}.npz"
+
+    # dump the arrays to the file output    
     if compressed:
         np.savez_compressed(npz_file, **arrays)
     else:
         np.savez(npz_file, **arrays)
 
-    # write JSON to the npz file:
+    # write JSON to the npz file
     output = {"inference_data": header}
-
-    z = zipfile.ZipFile(npz_file, "a")    
+    z = zipfile.ZipFile(npz_file, "a")
+    # header data will be in a file called "header.json" inside the zip
     if compressed:
         z.writestr("header.json", json.dumps(output), zipfile.ZIP_STORED)
     else:
         z.writestr("header.json", json.dumps(output), zipfile.ZIP_DEFLATED)
+
+    # output listing if requested
     if verbose:
         print("Writing archive file...")
         z.printdir()
@@ -29,7 +31,7 @@ def write_for_js(output_name, header, arrays, compressed=True, verbose=False):
 
 def fix_dtype(data):
     """Convert the passed object to a numpy array, making sure that the dtype is one of
-       the types that the npy loader supports. This could be one of:
+       the types that the npy loader currently supports. This could be one of:
        |u1, |i1, <u2, <u4, <i4, <f4, <f8
     """
     arr = np.array(data)
@@ -55,16 +57,14 @@ def arviz_to_json(inference_data, output_name):
         that can be loaded client-side, along with an NPZ file that holds the
         array data.
 
-        Writes:
-
-            <output_name>.json: JSON header
-            <output_name>.npz: Arrays, as an NPZ file            
+        Writes:            
+            <output_name>.npz: Arrays, as an NPZ file, with JSON included in archive
 
         Parameters:
         -----------
 
         inference_data: An ARviz inference data object
-        output_name: The prefix of the output files
+        output_name: The name of the output file
 
     """
 
@@ -105,9 +105,11 @@ def arviz_to_json(inference_data, output_name):
         array_headers[group_name] = header
 
     write_for_js(output_name, array_headers, arrays)
-    
+
 
 if __name__ == "__main__":
+    # test with the centered_eight dataset
     import arviz as az
-    data = az.load_arviz_data("centered_eight")    
-    arviz_to_json(data, "centered_eight")
+
+    data = az.load_arviz_data("centered_eight")
+    arviz_to_json(data, "centered_eight.npz")
