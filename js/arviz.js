@@ -68,6 +68,7 @@ function getLinearSample(a, b, vars, w) {
 // return average trace values
 function getExpectation(property, vars, weights) {
     expectations = {};
+    
     var trace_length = getData(property, vars[0]).length;
     if (typeof weights === 'undefined') {
         for (i = 0; i < vars.length; i++) {

@@ -46,9 +46,9 @@
 
             function sym_dirichlet(alpha, n)
             {
-                var gamma = jStat(0, 1, n, (_) => jStat.gamma.sample(alpha, 1));
-                var gamma_sum = jStat.sum(gamma);
-                return jStat(gamma, x=>x/gamma_sum);
+                var gamma = jStat(0, 1, n, (_) => jStat.gamma.sample(alpha, 1))[0];
+                var gamma_sum = jStat.sum(gamma);                
+                return jStat(gamma, x=>x/gamma_sum)[0];
             }
 
             // select
@@ -155,21 +155,28 @@
             var useExpectation = true;
             var priorWeight = 0.0;
             var priorIntegrator = 0.0;
-
+            var expectationConcentration = 0.001;
+            var expectationIntegration = 0.0;
+            
             function enable_anim() {
-                useExpectation = false;
+                //useExpectation = false;
+                
+                expectationIntegration = -0.1;
             }
 
             function disable_anim() {
                 useExpectation = true;
+                expectationIntegration = 0.1;
             }
 
             function dwell() {
+                useExpectation = false;
                 priorIntegrator = 0.01;
             }
 
             function relax() {
-                priorIntegrator = -0.01;
+                useExpectation = true;
+                priorIntegrator = -0.2;
             }
 
             // add interaction
@@ -223,9 +230,15 @@
             // Animation loop
             //
 
+            function clip(x) {
+                if(x>1.0) return 1.0;
+                if(x<0.01) return 0.01;
+                return x;
+            }
             // update prior weight, by saturated integration
             function updateState() {
-                priorWeight = Math.tanh(priorWeight + priorIntegrator);
+                priorWeight = clip(priorWeight + priorIntegrator);
+                expectationConcentration = clip(expectationConcentration+ expectationIntegration);
             }
 
             function drawSample() {
@@ -237,9 +250,14 @@
                 var pSample;
                 if (useExpectation) {
                     // static mean
-                    pSample = getExpectation(posterior, var_list);
+                    //pSample = getExpectation(posterior, var_list);
+                    var n_samples = posterior.vars.sigma.array.data.length;                    
+                    weights = sym_dirichlet(expectationConcentration, n_samples);                    
+                    pSample = getExpectation(posterior, var_list, weights);
+
                 } else if (priorWeight > 1e-2) {
                     // weighted sample between random prior and posterior
+                    console.log(priorWeight);
                     pSample = getLinearSample(prior, posterior, var_list, priorWeight);
                 } else {
                     // plain posterior sample
