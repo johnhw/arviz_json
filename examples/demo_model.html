@@ -22,20 +22,49 @@
 
     <script>
         function drawChart(arviz_data) {
-            console.log(arviz_data);
+
+            var observed = arviz_data.observed_data.vars;
+            var posterior = arviz_data.posterior.vars;
+
+            function getData(array_data) {
+                return array_data.array.data;
+            }
+
+            // return a single random sample from the trace
+            function getPosteriorSample(vars) {
+                var v0 = vars[0];
+                var random_index = Math.floor(Math.random() * getData(posterior[v0]).length);
+                var samples = {};
+                for (i = 0; i < vars.length; i++) {
+                    var v = vars[i];
+                    samples[v] = getData(posterior[v])[random_index];
+                }
+                return samples;
+            }
+
+            function remap(array, fn) {
+                array.array.data = array.array.data.map(fn);
+            }
+
+            // remap transformed variables
+            remap(posterior.switchpoint, x => x + 1960);
+            remap(posterior.poverty_at_switchpoint, x => x + 50);
+            remap(observed.year, x => x + 1960);
+            remap(observed.y, x => x + 50);
+
 
             // select
             var raw_data = {
-                "date": arviz_data.arrays.observed_data_year_0.data,
-                "value": arviz_data.arrays.observed_data_y_1.data
+                "date": getData(observed.year),
+                "value": getData(observed.y),
             }
 
-            // transpose
+            // transpose 
             var data = [];
             for (var i = 0; i < raw_data.date.length; i++) {
                 data.push({
-                    "date": raw_data.date[i] + 1960,
-                    "value": raw_data.value[i] + 50.0,
+                    "date": raw_data.date[i],
+                    "value": raw_data.value[i],
                 })
             }
             console.log(data);
@@ -110,36 +139,10 @@
                 .attr("r", 2);
 
 
-
-            function add_sample() {
-                var random_index = Math.floor(Math.random() * arviz_data.arrays.posterior_left_slope_3.data.length);
-                
-                var lslope = arviz_data.arrays.posterior_left_slope_3.data[random_index];
-                var rslope = arviz_data.arrays.posterior_right_slope_4.data[random_index];
-                var rl_switch = arviz_data.arrays.posterior_switchpoint_5.data[random_index] + 1960;
-                var switch_pov = arviz_data.arrays.posterior_poverty_at_switchpoint_2.data[random_index] + 50;
-
-                function map_line(at, slope, from, offset) {
-                    return offset + (at-from) * slope;
-                }
-                
-                var sample_data = [{
-                        date: 1820,
-                        value: map_line(1820, lslope, rl_switch, switch_pov)
-                    },
-                    {
-                        date: rl_switch,
-                        value: map_line(rl_switch, lslope, rl_switch, switch_pov)
-                    },
-                    {
-                        date: 2010,
-                        value: map_line(2010, rslope, rl_switch, switch_pov)
-                    },
-                ];
-
+            function setLinePath(sampleData, sigma) {
                 d3.selectAll("path").remove();
                 g.append("path")
-                    .datum(sample_data)
+                    .datum(sampleData)
                     .attr("fill", "none")
                     .attr("stroke", "steelblue")
                     .attr("stroke-linejoin", "round")
@@ -148,25 +151,51 @@
                     .attr("d", line);
 
                 g.append("path")
-                    .datum(sample_data)
+                    .datum(sampleData)
                     .attr("fill", "none")
                     .attr("stroke", "steelblue")
                     .attr("stroke-linejoin", "round")
                     .attr("stroke-linecap", "round")
                     .attr('stroke-opacity', 0.2)
-                    .attr("stroke-width", 0.5*y(arviz_data.arrays.posterior_sigma_7.data[random_index]+50))
+                    .attr("stroke-width", 0.5 * y(sigma + 50))
                     .attr("d", line);
             }
 
-            add_sample();
+            function drawSample() {
+                var pSample = getPosteriorSample(["sigma", "left_slope", "right_slope",
+                    "switchpoint", "poverty_at_switchpoint"
+                ]);
+
+                function map_line(at, slope, from, offset) {
+                    return offset + (at - from) * slope;
+                }
+
+                // construct the linear segments
+                var sample_data = [{
+                        date: 1820,
+                        value: map_line(1820, pSample.left_slope, pSample.switchpoint, pSample.poverty_at_switchpoint)
+                    },
+                    {
+                        date: pSample.switchpoint,
+                        value: map_line(pSample.switchpoint, pSample.left_slope, pSample.switchpoint, pSample.poverty_at_switchpoint)
+                    },
+                    {
+                        date: 2010,
+                        value: map_line(2010, pSample.right_slope, pSample.switchpoint, pSample.poverty_at_switchpoint)
+                    },
+                ];
+
+                setLinePath(sample_data, pSample.sigma);
+            }
+
+            // begin animating the draws
             window.setInterval(function () {
-                /// call your function here
-                add_sample();
+                drawSample();
             }, 50);
         }
 
-        load_npz("switchpoint.npz", function (arviz) {
-            drawChart(arviz)
+        load_npz("switchpoint.npz", function (npz_data) {
+            drawChart(reassemble_arviz(npz_data));
         });
     </script>
 
