@@ -24,10 +24,16 @@ The module includes functionality to extract a very basic skeleton of the DAG fr
 And this data can then can be loaded in-browser:
 
 ```javascript
-    load_npz("switchpoint.npz", function(arviz_data)
+    load_npz("switchpoint.npz", function(npz_data)
             {
-                console.log(arviz_data.header); // the header data
-                console.log(arviz_data.arrays); // the numeric arrays                
+                arviz_data = reassemble_arviz(npz_data);
+                console.log(arviz_data.observed); // observations
+                console.log(arviz_data.posterior); // posterior samples
+                console.log(arviz_data.prior); // prior samples
+                console.log(arviz_data.sample_stats); // statistics
+                console.log(arviz_data.sample_stats.dag); // graph of model
+                console.log(arviz_data.posterior_predictive); // p. predictive samples
+                
             });      
 
 ```
