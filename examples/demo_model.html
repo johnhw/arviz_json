@@ -33,7 +33,7 @@
             function remap(property, varname, fn) {
                 property.vars[varname].array.data = property.vars[varname].array.data.map(fn);
             }
-            
+
             // remap transformed variables            
             remap(posterior, "switchpoint", x => x + 1960);
             remap(posterior, "poverty_at_switchpoint", x => x + 50);
@@ -44,22 +44,28 @@
             remap(observed, "y", x => x + 50);
 
 
+            function extractColumnData(property, columns) {
+                // select                
+                var raw_data = {};
+                for (var i = 0; i < columns.length; i++) {                    
+                    raw_data[columns[i]] = getData(property, columns[i]);
+                }
+
+                // transpose 
+                var data = [];
+                for (var i = 0; i < raw_data[columns[0]].length; i++) {
+                    var row = {};
+                    for (var j = 0; j < columns.length; j++) {                        
+                        row[columns[j]] = raw_data[columns[j]][i];
+                    }
+                    data.push(row);
+                }
+                return data;
+            }
+
+            var data = extractColumnData(observed, ["year", "y"]);
+
             
-            // select
-            var raw_data = {
-                "date": getData(observed, "year"),
-                "value": getData(observed, "y"),
-            }
-
-            // transpose 
-            var data = [];
-            for (var i = 0; i < raw_data.date.length; i++) {
-                data.push({
-                    "date": raw_data.date[i],
-                    "value": raw_data.value[i],
-                })
-            }
-
             ///////////////////////////////////////////////////////
             // Create SVG objects
             var width, height;
@@ -100,13 +106,13 @@
             // construct the line 
             var line = d3.line()
                 .x(function (d) {
-                    return x(d.date)
+                    return x(d.year)
                 })
                 .y(function (d) {
-                    return y(d.value)
+                    return y(d.y)
                 })
             x.domain(d3.extent(data, function (d) {
-                return d.date;
+                return d.year;
             }));
             y.domain([0, 100]);
 
@@ -141,17 +147,17 @@
                 .data(data)
                 .enter()
                 .append("circle")
-                .attr("cx", d => x(d.date))
-                .attr("cy", d => y(d.value))
+                .attr("cx", d => x(d.year))
+                .attr("cy", d => y(d.y))
                 .attr("r", 2);
 
 
             var useExpectation = true;
             var priorWeight = 0.0;
             var priorIntegrator = 0.0;
-            
+
             function enable_anim() {
-                useExpectation = false;                                
+                useExpectation = false;
             }
 
             function disable_anim() {
@@ -159,11 +165,11 @@
 
             }
 
-            function dwell() {                
+            function dwell() {
                 priorIntegrator = 0.01;
             }
 
-            function relax() {                
+            function relax() {
                 priorIntegrator = -0.05;
             }
 
@@ -174,7 +180,36 @@
                 .on("mouseenter", enable_anim)
                 .on("mouseleave", disable_anim);
 
+            function subsample(arr, n)
+            {
+                var length = arr.length;
+                var indexs = Array.from({length:n}, (_)=>Math.floor(Math.random()*length));
+                var result = [];
+                for(var i=0;i<n;i++)
+                {
+                    result.push(arr[indexs[i]]);
+                }
+                return result;
 
+            }
+            function setPredictiveScatter(samples) {
+                d3.selectAll("#posterior_predictive").remove();
+
+                
+
+                // add scatter plot
+                g.append("g")
+                    .attr("id", "posterior_predictive")
+                    .attr("class", "scatterplot")
+                    .selectAll("circle")
+                    .data(subsample(samples, 150))                    
+                    .enter()
+                    .append("circle")                                        
+                    .attr("cx", d => x(d.year+1960))
+                    .attr("cy", d => y(d.y+50))
+                    .attr("r", 1);
+
+            }
 
             // draw a piecewise linear path, with a given
             // std. dev ribbon plot
@@ -219,13 +254,13 @@
             //
 
             function clip(x) {
-                if(x>1.0) return 1.0;
-                if(x<0.01) return 0.01;
+                if (x > 1.0) return 1.0;
+                if (x < 0.01) return 0.01;
                 return x;
             }
             // update prior weight, by saturated integration
             function updateState() {
-                priorWeight = clip(priorWeight + priorIntegrator);                
+                priorWeight = clip(priorWeight + priorIntegrator);
             }
 
             function drawSample() {
@@ -237,7 +272,7 @@
                 var pSample;
                 if (useExpectation) {
                     // static mean
-                    pSample = getExpectation(posterior, var_list);                    
+                    pSample = getExpectation(posterior, var_list);
                 } else if (priorWeight > 1e-2) {
                     // weighted sample between random prior and posterior                    
                     pSample = getLinearSample(prior, posterior, var_list, priorWeight);
@@ -252,16 +287,16 @@
 
                 // construct the linear segments
                 var sample_data = [{
-                        date: 1820,
-                        value: map_line(1820, pSample.left_slope, pSample.switchpoint, pSample.poverty_at_switchpoint)
+                        year: 1820,
+                        y: map_line(1820, pSample.left_slope, pSample.switchpoint, pSample.poverty_at_switchpoint)
                     },
                     {
-                        date: pSample.switchpoint,
-                        value: map_line(pSample.switchpoint, pSample.left_slope, pSample.switchpoint, pSample.poverty_at_switchpoint)
+                        year: pSample.switchpoint,
+                        y: map_line(pSample.switchpoint, pSample.left_slope, pSample.switchpoint, pSample.poverty_at_switchpoint)
                     },
                     {
-                        date: 2010,
-                        value: map_line(2010, pSample.right_slope, pSample.switchpoint, pSample.poverty_at_switchpoint)
+                        year: 2010,
+                        y: map_line(2010, pSample.right_slope, pSample.switchpoint, pSample.poverty_at_switchpoint)
                     },
                 ];
 
@@ -269,7 +304,14 @@
 
                 // update state variables
                 updateState();
+
+                // Note: posterior predictive **does not** match the current posterior trace sample!!!
+                // this needs to be fixed
+                setPredictiveScatter(extractColumnData(arviz_data.posterior_predictive, ["year", "y"]));
             }
+
+            
+
 
             ///////////////////////////////////////////////////////////////////            
             // begin animating the draws

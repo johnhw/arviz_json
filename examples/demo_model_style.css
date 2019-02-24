@@ -26,6 +26,14 @@ body
                 
 }
 
+#posterior_predictive
+{
+    stroke: orange;
+    stroke-width: 1.5;
+    fill: none;
+    opacity:0.5;                
+}
+
 .domain
 {
     stroke: #d0d0d0;

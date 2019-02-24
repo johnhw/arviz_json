@@ -39,7 +39,7 @@ def define_model(poverty):
     switch_model = pm.Model()
 
     with switch_model:
-        year = pm.Normal("year", mu=0, sd=1, observed=poverty["year"] - mean_year)        
+        year = pm.Uniform("year", lower=-150, upper=150, observed=poverty["year"] - mean_year)        
         poverty_at_switchpoint = pm.Normal("poverty_at_switchpoint", mu=0, sd=10.0)
 
         left_slope = pm.Normal("left_slope", mu=0, sd=0.5)
