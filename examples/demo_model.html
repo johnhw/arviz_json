@@ -76,15 +76,16 @@
                     svgHeight = 400;
                 var margin = {
                     top: 60,
-                    right: 60,
-                    bottom: 60,
-                    left: 150
+                    right: 100,
+                    bottom: 100,
+                    left: 100
                 };
                 width = svgWidth - margin.left - margin.right;
                 height = svgHeight - margin.top - margin.bottom;
                 var svg = d3.select('svg')
                     .attr("width", svgWidth)
-                    .attr("height", svgHeight);
+                    .attr("height", svgHeight)
+                    .attr("id", "canvas");
 
 
                 // main group for all elements
@@ -118,18 +119,21 @@
             // add axis guides
             g.append("g")
                 .attr("transform", "translate(0," + height + ")")
-                .call(d3.axisBottom(x))
+                .call(d3.axisBottom(x))                
                 .attr("class", "tickLabel")
-                .select(".domain")
-                .remove();
+                
+                .append("text")                                
+                .attr("class", "axisLabel")                                                            
+                .attr("text-anchor", "middle")
+                .attr("dy", "40px")                
+                .text("Year");
 
 
             g.append("g")
                 .call(d3.axisLeft(y))
                 .attr("class", "tickLabel")
                 .append("text")
-                .attr("class", "axisLabel")
-                .attr("fill", "#000")
+                .attr("class", "axisLabel")                
                 .attr("transform", "rotate(-90)")
                 .attr("y", 6)
                 .attr("dy", "-40px")
@@ -138,9 +142,7 @@
 
             // add scatter plot
             g.append("g")
-                .attr("stroke", "steelblue")
-                .attr("stroke-width", 1.5)
-                .attr("fill", "none")
+                .attr("class", "scatterplot")
                 .selectAll("circle")
                 .data(data)
                 .enter()
@@ -153,24 +155,17 @@
             // draw a piecewise linear path, with a given
             // std. dev ribbon plot
             function setLinePath(sampleData, sigma) {
-                d3.selectAll("path").remove();
+                d3.select("#mean").remove();
+                d3.select("#ribbon").remove();
 
                 g.append("path")
                     .datum(sampleData)
-                    .attr("fill", "none")
-                    .attr("stroke", "steelblue")
-                    .attr("stroke-linejoin", "round")
-                    .attr("stroke-linecap", "round")
-                    .attr("stroke-width", 2.5)
+                    .attr("id", "mean")
                     .attr("d", line);
 
                 g.append("path")
-                    .datum(sampleData)
-                    .attr("fill", "none")
-                    .attr("stroke", "steelblue")
-                    .attr("stroke-linejoin", "miter")
-                    .attr("stroke-linecap", "miter")
-                    .attr('stroke-opacity', 0.2)
+                    .datum(sampleData)                    
+                    .attr("id", "ribbon")
                     .attr("stroke-width", 0.5 * y(sigma + 50))
                     .attr("d", line);
             }

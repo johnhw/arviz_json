@@ -1,7 +1,62 @@
-.axisLabel {
-    font-size: 18px;
+body
+{
+    background-color: white;
 }
 
-.tickLabel {
-    font-size: 12px;
+#canvas
+{
+    background-color: white;
+    margin: 100px;
+    outline-color: #eeeeee;
+    outline-style: solid;
+    outline-width: 1px;
 }
+
+.axisLabel {
+    font-size: 16px;
+    fill: #909090;
+}
+
+.scatterplot
+{
+    stroke: steelblue;
+    stroke-width: 1.5;
+    fill: none;
+                
+}
+
+.domain
+{
+    stroke: #d0d0d0;
+}
+
+.tick line 
+{
+    stroke: #a0a0a0;
+}
+
+.tick text
+{
+    font-size: 12px;    
+    fill: #a0a0a0;
+}
+
+
+#mean
+{    
+    fill: none;
+    stroke:steelblue;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    stroke-width: 2.5;
+}
+
+#ribbon
+{    
+    fill: none;
+    stroke:steelblue;
+    stroke-linejoin: miter;
+    stroke-linecap: miter;
+    opacity: 0.2;    
+}
+
