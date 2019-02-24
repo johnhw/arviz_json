@@ -12,8 +12,7 @@
         <script src="../js/npy.js"></script>
         <script src="../js/npz.js"></script>
         <script src="../js/arviz.js"></script>
-        <script>
-        </script>
+        <link rel = "stylesheet" type = "text/css" href = "demo_model_style.css" />
     </head>
 
 <body>
@@ -42,11 +41,12 @@
                 return samples;
             }
 
+            // Remap values
             function remap(array, fn) {
                 array.array.data = array.array.data.map(fn);
             }
 
-            // remap transformed variables
+            // remap transformed variables            
             remap(posterior.switchpoint, x => x + 1960);
             remap(posterior.poverty_at_switchpoint, x => x + 50);
             remap(observed.year, x => x + 1960);
@@ -67,29 +67,36 @@
                     "value": raw_data.value[i],
                 })
             }
-            console.log(data);
 
-            // create canvas
-            var svgWidth = 1000,
-                svgHeight = 400;
-            var margin = {
-                top: 20,
-                right: 20,
-                bottom: 30,
-                left: 50
-            };
-            var width = svgWidth - margin.left - margin.right;
-            var height = svgHeight - margin.top - margin.bottom;
-            var svg = d3.select('svg')
-                .attr("width", svgWidth)
-                .attr("height", svgHeight);
+            var width, height;
+
+            function createCanvas() {
+                // create canvas
+                var svgWidth = 1000,
+                    svgHeight = 400;
+                var margin = {
+                    top: 60,
+                    right: 60,
+                    bottom: 60,
+                    left: 150
+                };
+                width = svgWidth - margin.left - margin.right;
+                height = svgHeight - margin.top - margin.bottom;
+                var svg = d3.select('svg')
+                    .attr("width", svgWidth)
+                    .attr("height", svgHeight);
 
 
-            // main group for all elements
-            var g = svg.append("g")
-                .attr("transform",
-                    "translate(" + margin.left + "," + margin.top + ")"
-                );
+                // main group for all elements
+                var g = svg.append("g")
+                    .attr("transform",
+                        "translate(" + margin.left + "," + margin.top + ")"
+                    );
+                return g;
+            }
+
+            g = createCanvas();
+
 
             // construct axis objects
             var x = d3.scaleLinear().rangeRound([0, width]);
@@ -112,20 +119,24 @@
             g.append("g")
                 .attr("transform", "translate(0," + height + ")")
                 .call(d3.axisBottom(x))
+                .attr("class", "tickLabel")
                 .select(".domain")
                 .remove();
 
 
             g.append("g")
                 .call(d3.axisLeft(y))
+                .attr("class", "tickLabel")
                 .append("text")
+                .attr("class", "axisLabel")
                 .attr("fill", "#000")
                 .attr("transform", "rotate(-90)")
                 .attr("y", 6)
-                .attr("dy", "0.71em")
+                .attr("dy", "-40px")
                 .attr("text-anchor", "end")
                 .text("Poverty rate");
 
+            // add scatter plot
             g.append("g")
                 .attr("stroke", "steelblue")
                 .attr("stroke-width", 1.5)
@@ -139,8 +150,11 @@
                 .attr("r", 2);
 
 
+            // draw a piecewise linear path, with a given
+            // std. dev ribbon plot
             function setLinePath(sampleData, sigma) {
                 d3.selectAll("path").remove();
+
                 g.append("path")
                     .datum(sampleData)
                     .attr("fill", "none")
@@ -154,8 +168,8 @@
                     .datum(sampleData)
                     .attr("fill", "none")
                     .attr("stroke", "steelblue")
-                    .attr("stroke-linejoin", "round")
-                    .attr("stroke-linecap", "round")
+                    .attr("stroke-linejoin", "miter")
+                    .attr("stroke-linecap", "miter")
                     .attr('stroke-opacity', 0.2)
                     .attr("stroke-width", 0.5 * y(sigma + 50))
                     .attr("d", line);
