@@ -30,8 +30,7 @@
                 return array_data.array.data;
             }
 
-            function getSample(property, vars)
-            {
+            function getSample(property, vars) {
                 var property_block = arviz_data[property].vars;
                 var v0 = vars[0];
                 var random_index = Math.floor(Math.random() * getData(property_block[v0]).length);
@@ -54,10 +53,9 @@
                 var posterior_samples = getPosteriorSample(vars);
                 var prior_samples = getSample("prior", vars);
                 var weighted_samples = {}
-                for(v in posterior_samples)
-                {
-                    weighted_samples[v] = (1-w) * posterior_samples[v] + (w) * prior_samples[v];
-                }                                
+                for (v in posterior_samples) {
+                    weighted_samples[v] = (1 - w) * posterior_samples[v] + (w) * prior_samples[v];
+                }
                 return weighted_samples;
             }
 
@@ -67,7 +65,7 @@
                 var trace_length = getData(posterior[vars[0]]).length;
                 for (i = 0; i < vars.length; i++) {
                     var v = vars[i];
-                    expectations[v] = getData(posterior[v]).reduce((a,b)=>a+b)/trace_length;
+                    expectations[v] = getData(posterior[v]).reduce((a, b) => a + b) / trace_length;
                 }
                 return expectations;
             }
@@ -82,7 +80,7 @@
             remap(posterior.poverty_at_switchpoint, x => x + 50);
             remap(prior.switchpoint, x => x + 1960);
             remap(prior.poverty_at_switchpoint, x => x + 50);
-            
+
             remap(observed.year, x => x + 1960);
             remap(observed.y, x => x + 50);
 
@@ -170,7 +168,7 @@
                 .attr("class", "axisLabel")
                 .attr("transform", "rotate(-90)")
                 .attr("y", 6)
-                .attr("dy", "-40px")
+                .attr("dy", "-50px")
                 .attr("text-anchor", "end")
                 .text("Poverty rate");
 
@@ -191,37 +189,36 @@
             var priorIntegrator = 0.0;
 
             function enable_anim() {
-                useExpectation = false;                
+                useExpectation = false;
             }
 
             function disable_anim() {
-                useExpectation = true;            
+                useExpectation = true;
             }
 
-            function dwell()
-            {
+            function dwell() {
                 priorIntegrator = 0.01;
             }
 
-            function relax()
-            {
+            function relax() {
                 priorIntegrator = -0.01;
             }
 
             // add interaction
             d3.select("svg")
-            .on("mousedown", dwell)
-            .on("mouseup", relax)
-            .on("mouseenter", enable_anim)
-            .on("mouseleave", disable_anim);
+                .on("mousedown", dwell)
+                .on("mouseup", relax)
+                .on("mouseenter", enable_anim)
+                .on("mouseleave", disable_anim);
 
 
 
             // draw a piecewise linear path, with a given
             // std. dev ribbon plot
-            function setLinePath(sampleData, sigma) {
+            function setLinePath(sampleData, sigma, switchpoint) {
                 d3.select("#mean").remove();
                 d3.select("#ribbon").remove();
+                d3.select("#splitline").remove();
 
 
                 g.append("path")
@@ -234,33 +231,35 @@
                     .attr("id", "ribbon")
                     .attr("stroke-width", 0.5 * y(sigma + 50))
                     .attr("d", line);
+
+                g.append("line")          
+                    .attr("id", "splitline")                    
+                    .attr("x1", x(switchpoint))     
+                    .attr("y1", y(0.0))      
+                    .attr("x2", x(switchpoint))   
+                    .attr("y2", y(100.0));    
             }
 
             // update prior weight, by saturated integration
-            function updateState()
-            {
-                priorWeight = Math.tanh(priorWeight+priorIntegrator);                
+            function updateState() {
+                priorWeight = Math.tanh(priorWeight + priorIntegrator);
             }
 
             function drawSample() {
                 // select a random sample, and draw the corresponding model
 
                 var pSample;
-                if(useExpectation)
-                {
+                if (useExpectation) {
                     // static mean
                     pSample = getPosteriorExpectation(["sigma", "left_slope", "right_slope",
-                        "switchpoint", "poverty_at_switchpoint"]);            
-                }
-                else if(priorWeight>1e-2)
-                {
+                        "switchpoint", "poverty_at_switchpoint"
+                    ]);
+                } else if (priorWeight > 1e-2) {
                     // weighted sample between random prior and posterior
                     pSample = getLinearPriorPosteriorSample(["sigma", "left_slope", "right_slope",
                         "switchpoint", "poverty_at_switchpoint"
                     ], priorWeight);
-                }
-                else
-                {
+                } else {
                     // plain posterior sample
                     pSample = getPosteriorSample(["sigma", "left_slope", "right_slope",
                         "switchpoint", "poverty_at_switchpoint"
@@ -286,7 +285,7 @@
                     },
                 ];
 
-                setLinePath(sample_data, pSample.sigma);
+                setLinePath(sample_data, pSample.sigma, pSample.switchpoint);
 
                 // update state variables
                 updateState();
