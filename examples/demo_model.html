@@ -217,7 +217,7 @@
             // std. dev ribbon plot
             function setLinePath(sampleData, sigma, switchpoint) {
                 d3.select("#mean").remove();
-                d3.select("#ribbon").remove();
+                d3.selectAll("#ribbon").remove();
                 d3.select("#splitline").remove();
 
 
@@ -226,11 +226,21 @@
                     .attr("id", "mean")
                     .attr("d", line);
 
+                // convert data units to screen units on y axis
+                var sigma_width = 2*(y(0) - y(sigma));
+
                 g.append("path")
                     .datum(sampleData)
                     .attr("id", "ribbon")
-                    .attr("stroke-width", 0.5 * y(sigma + 50))
+                    .attr("stroke-width", sigma_width)
                     .attr("d", line);
+
+                g.append("path")
+                    .datum(sampleData)
+                    .attr("id", "ribbon")
+                    .attr("stroke-width", 2*sigma_width)
+                    .attr("d", line);
+
 
                 g.append("line")          
                     .attr("id", "splitline")                    
