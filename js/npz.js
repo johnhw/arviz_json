@@ -25,9 +25,10 @@ function load_npz(url, callback) {
 
                     var components = file_name.split(".");
                     var extension = components[components.length - 1];
+                    
 
-                    function completion_check() {
-                        n_files += 1;
+                    function completion_check() {                        
+                        n_files += 1;                        
                         // if we've loaded everything, call the callback                        
                         if (n_files == n_entries) {
                             callback(arrays);
@@ -42,20 +43,18 @@ function load_npz(url, callback) {
                             completion_check();
                         });
                     }
-
                     // extension: allow JSON files as well
-                    if (extension === 'json') {
+                    else if (extension === 'json') {
                         var reader = new FileReader();
                         reader.onload = function () {
                             // the file contents have been read as an array buffer
                             var buf = reader.result;
-                            var result = JSON.parse(buf);
+                            var result = JSON.parse(buf);                            
                             arrays["json"][file_name.slice(0, -5)] = result;
                             completion_check();
                         };
                         reader.readAsText(blob);
                     }
-
                     // other type of file: ignored for now
                     else {
                         completion_check();
