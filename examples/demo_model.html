@@ -155,28 +155,22 @@
             var useExpectation = true;
             var priorWeight = 0.0;
             var priorIntegrator = 0.0;
-            var expectationConcentration = 0.001;
-            var expectationIntegration = 0.0;
             
             function enable_anim() {
-                //useExpectation = false;
-                
-                expectationIntegration = -0.1;
+                useExpectation = false;                                
             }
 
             function disable_anim() {
                 useExpectation = true;
-                expectationIntegration = 0.1;
+
             }
 
-            function dwell() {
-                useExpectation = false;
+            function dwell() {                
                 priorIntegrator = 0.01;
             }
 
-            function relax() {
-                useExpectation = true;
-                priorIntegrator = -0.2;
+            function relax() {                
+                priorIntegrator = -0.05;
             }
 
             // add interaction
@@ -237,8 +231,7 @@
             }
             // update prior weight, by saturated integration
             function updateState() {
-                priorWeight = clip(priorWeight + priorIntegrator);
-                expectationConcentration = clip(expectationConcentration+ expectationIntegration);
+                priorWeight = clip(priorWeight + priorIntegrator);                
             }
 
             function drawSample() {
@@ -250,14 +243,9 @@
                 var pSample;
                 if (useExpectation) {
                     // static mean
-                    //pSample = getExpectation(posterior, var_list);
-                    var n_samples = posterior.vars.sigma.array.data.length;                    
-                    weights = sym_dirichlet(expectationConcentration, n_samples);                    
-                    pSample = getExpectation(posterior, var_list, weights);
-
+                    pSample = getExpectation(posterior, var_list);                    
                 } else if (priorWeight > 1e-2) {
-                    // weighted sample between random prior and posterior
-                    console.log(priorWeight);
+                    // weighted sample between random prior and posterior                    
                     pSample = getLinearSample(prior, posterior, var_list, priorWeight);
                 } else {
                     // plain posterior sample
