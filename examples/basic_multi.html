@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>arviz test</title>
+</head>
+
+<body id="body">
+
+</body>
+
+<script src="../js/zip/zip.js"></script>
+<script src="../js/zip/zip-ext.js"></script>
+<script src="../js/zip/inflate.js"></script>
+<script src="../js/npy.js"></script>
+<script src="../js/npz.js"></script>
+<script src="../js/arviz.js"></script>
+
+
+<script>
+    //https://stackoverflow.com/questions/6234773/can-i-escape-html-special-chars-in-javascript
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    // convert to a string, truncating long arrays
+    function stringify(obj, no_escape) {
+        return escapeHtml(JSON.stringify(obj,
+            function (k, v) {
+                if (!isNaN(v)) return Math.floor(v * 10) / 10.0;
+                if (v.join && v.length>6) return Array.from(v.slice(0, 6)).concat("... ["+(v.length-6)+" more]");
+                else return v;
+            }, 4));
+    }
+
+    function showDump(arviz) {
+        document.getElementById("body").innerHTML = "<pre>" + stringify(arviz) + "</pre>";
+    }
+    /////////////////////////////////////////////////////////////////////////////////////
+    // Entry point
+
+    
+    // read zip from URL    
+    loadMultiModel("multimodel.zip").then(npz_data => console.log(npz_data));
+    
+    //load_npz("switchpoint.npz").then(npz_data => showDump(reassemble_arviz(npz_data)));
+    
+</script>
+</body>
+
+</html>

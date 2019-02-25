@@ -7,10 +7,6 @@
 // avoids having to specify path to zip files
 zip.useWebWorkers = false;
 
-function load_model(blob, file_name) {
-    var reader = new FileReader();
-    return parse_npz(reader);
-}
 
 function readJSONBlob(blob) {
     var promise = new Promise(function (resolve, reject) {
@@ -26,24 +22,30 @@ function readJSONBlob(blob) {
     return promise;
 }
 
-function readNpy(blob)
-{
-    return new Promise(function (resolve, reject)
-    {
+function readNpy(blob) {
+    return new Promise(function (resolve, reject) {
         NumpyLoader.open(blob, function (arr) {
-            resolve(arr);            
+            resolve(arr);
         });
     });
+}
+// convert [[a,b], [c, d], ...] -> {a:b, c:d, ...}
+function pairsToObj(pairs) {
+    var mapping = {};
+    for (var i = 0; i < pairs.length; i++) {
+        mapping[pairs[i][0]] = pairs[i][1];
+    }
+    return mapping;
 }
 
 // iterate over each file in a zip file
 // calls file_callback(blob, filename, extension) on each file
 // file should return the a Promise unpacking the results
-function iterate_zip(reader, file_callback) {    
+function iterateZip(reader, file_callback) {
     // iterate over the zip 
     var all_promise = new Promise(function (resolve, reject) {
         reader.getEntries(function (entries) {
-            var promises = [];
+            var entry_promises = [];
             // process each entry, creating a promise for each file in the zip archive
             for (var entry of entries) {
                 var result = new Promise(function (resolve_file, reject_file) {
@@ -56,43 +58,54 @@ function iterate_zip(reader, file_callback) {
                             return function (blob) {
                                 var components = filename.split(".");
                                 var extension = components[components.length - 1];
-                                callback(blob, filename, extension).then(result => resolve_file([filename, result]));                                
+                                callback(blob, filename, extension).then(result => resolve_file([filename, result]));
                             }
                         }()
                     )
                 });
-                promises.push(result);
-            }  
+                entry_promises.push(result);
+            }
             // resolve to a mapping of filenames to loaded entries                      
-            Promise.all(promises).then(function(value)
-            {
-                mapping = {};
-                for(var i=0;i<value.length;i++)
-                {
-                    mapping[value[i][0]] = value[i][1];
-                }                
-                resolve(mapping);
-            });            
+            Promise.all(entry_promises).then(function (pairs) {
+                resolve(pairsToObj(pairs));
+            });
         })
     });
     return all_promise;
 }
 
-function parse_npz(reader)
-{
-    return iterate_zip(reader, function(blob, filename, extension)
-    {                
-        if(extension=='npy') return readNpy(blob);
-        if(extension=='json') return readJSONBlob(blob);
+function parseNpz(reader) {
+    return iterateZip(reader, function (blob, filename, extension) {
+        if (extension == 'npy') return readNpy(blob);
+        if (extension == 'json') return readJSONBlob(blob);
         else return null;
     });
 }
 
+function readZipWith(url, readerFn) {
+    return new Promise(function (resolve, reject) {
+        zip.createReader(new zip.HttpReader(url), reader => resolve(readerFn(reader)));
+    })
+}
 
 function load_npz(url) {
-    // read zip from URL
-    return new Promise(function(resolve, reject)
-    {
-        zip.createReader(new zip.HttpReader(url), reader => resolve(parse_npz(reader)));
-    })
+    return readZipWith(url, parseNpz);
+}
+
+// load an NPZ file from an in memory blob
+function readNpzFromBlob(blob) {
+    var promise = new Promise(function (resolve, reject) {
+        zip.createReader(new zip.BlobReader(blob), reader=>resolve(parseNpz(reader)));        
+    });
+    return promise;
+}
+
+// load multiple npz files inside a zip file
+function loadMultiModel(url) {
+    function parse_multi(reader) {
+        return iterateZip(reader, function (blob, filename, extension) {
+            if (extension == 'npz') return readNpzFromBlob(blob);
+        });
+    }
+    return readZipWith(url, parse_multi);
 }
