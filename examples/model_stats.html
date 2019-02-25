@@ -13,42 +13,65 @@
     <div class="template-holder"></div>
 
     <script id="entry-template" type="text/x-handlebars-template">
-        <div class="container">
+        <div class="container-fluid">
         <div class="row">
-            <div class="col-md-2"> </div>
-                <div class="col-md-8">
-                    <h1 class="hero">{{title}}</h1>
+                <div class="jumbotron col-md-12"> <h4> ARViz Inference Data Viewer </h4> </div>
+        </div>
+        <div class="row">
+            
+            <nav class="col-md-3 sidebar d-none d-md-block bg-light"> 
+                    <div class="sidebar-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item" data-target="basic_stats"> <a class="nav-link active" href='#'>Basic attributes </a></li> 
+                        <li class="nav-item" data-target="model_variables"> <a class="nav-link" href='#'>Model Variables</a></li> 
+                        <li class="nav-item" data-target="sampler_statistics"> <a class="nav-link" href='#'>Sampler Statistics </a></li> 
+                        <li class="nav-item" data-target="observed"> <a class="nav-link" href='#'>Sampler Observations</a></li> 
+                        <li class="nav-item" data-target="posterior_trace"> <a class="nav-link" href='#'>Posterior Trace </a></li> 
+                        <li class="nav-item" data-target="posterior_predictive"> <a class="nav-link" href='#'>Posterior Predictive </a></li> 
+                        <li class="nav-item"data-target="prior"> <a class="nav-link" href='#'>Prior</a></li>             
+                    </ul>
+                    </div>
+                </nav>
+            
 
-
-
-            <h2>Inference stats</h2>
-
-            {{!Basic statistics}}
-            <table class="table">
-                {{#each basic_attribute}}
-                <tr> <td> {{@key}} </td> <td> {{this}} </td> </tr>
-                {{/each}}
-            </table>
+            <div class="col-md-8">
+                       
+            <div class="hideable" id="basic_stats">
+                <h2> Basic attributes </h2>
+                {{!Basic attributes}}
+                <table class="table">
+                    {{#each basic_attribute}}
+                    <tr> <td> {{@key}} </td> <td> {{this}} </td> </tr>
+                    {{/each}}
+                </table>
+            </div>
 
             {{! Listing of variables in model}}
-            <h2> Model Variables </h2>
-            <table class="table">
-                <tr>{{#each variable_header}}
-                    <th> {{this}} </th>
+            <div class="d-none hideable" id="model_variables">
+                <h2> Model Variables </h2>
+                <table class="table table-striped table-hover">
+                    <thead class="thead-dark">
+                        <tr>{{#each variable_header}}
+                            <th> {{this}} </th>
+                            {{/each}}
+                        </tr>
+                    </thead>
+
+                    {{#each variable_table}}
+                    <tr>
+                        {{#each this}}<td>{{this}}</td>{{/each}}
+                    </tr>
                     {{/each}}
-                </tr>
-                {{#each variable_table}}
-                <tr>
-                    {{#each this}}<td>{{this}}</td>{{/each}}
-                </tr>
-                {{/each}}
-            </table>
+                </table>
+            </div>
 
             {{#each xarrays}}
-            <h2> {{@key}} </h2>
+            <div class="d-none hideable" id="{{@key}}">
+                <h2> {{title @key}} </h2>
                 {{> xarray }}
+            </div>
             {{/each}}
-
+            
 
             </div>
             <div class="col-md-2"> </div>
@@ -60,6 +83,7 @@
     <script src="../js/zip/zip.js"></script>
     <script src="../js/zip/zip-ext.js"></script>
     <script src="../js/zip/inflate.js"></script>
+    <script src="../js/underscore/underscore-min.js"></script>
     <script src="../js/npy.js"></script>
     <script src="../js/npz.js"></script>
     <script src="../js/handlebars/handlebars-v4.1.0.js"></script>
@@ -110,10 +134,12 @@
 
         var variable_table = createTable(sample_attrs.graph, [
           d => d.type,
-          d => d.parents,
+          d => d.parents.join(", "),
           d => d.distribution.type,
           d => d.distribution.shape
         ]);
+
+       
 
         console.log(arviz);
 
@@ -124,6 +150,7 @@
         Handlebars.registerHelper("shape", function(shape) {
           return "(" + shape.join(", ") + ")";
         });
+
 
         // print dtypes in a human readable form
         var dtype_names = {
@@ -146,20 +173,30 @@
           return dtype_names[dtype];
         });
 
+        Handlebars.registerHelper("title", function(title) {
+            return title.charAt(0).toUpperCase() + title.slice(1).replace("_", " ");
+          });
+  
         // template for an xarray, showing the dimensions
         Handlebars.registerPartial(
           "xarray",
           `            
-            <h4 class="btn btn-primary" data-toggle="collapse" data-target=".{{@key}}_dims"> Dimensions </h4>            
-            <table class="table {{@key}}_dims collapse">                
+                    
+            <table class="table">                
+                <thead class="thead-dark">
+                    <tr> <th> Dimension </th> <th> Size </th> 
+                </thead>
+                
                 {{#each dims}}                
                 <tr> <td> {{@key}} </td> <td> {{this}} </td> </tr>
                 {{/each}}
             </table>            
 
-            <h4 data-toggle="collapse" data-target=".{{@key}}_vars"> Variables </h4>
-            <table class="table {{@key}}_vars collapse">
+            
+            <table class="table table-striped table-hover">
+                <thead class="thead-dark">
                 <tr> <th> Variable </th> <th> Shape </th> <th> dtype </th> </tr>
+                </thead>
                 {{#each vars}}                
                 <tr> <td> {{@key}} </td> <td> {{shape this.shape}} </td> <td> {{dtype this.dtype}} </tr>
                 {{/each}}
@@ -174,17 +211,31 @@
 
           variable_table: variable_table,
           xarrays: {
-            sample_stats: arviz.sample_stats,
-            observed: arviz.observed_data,
-            posterior: arviz.posterior,
-            posterior_predictive: arviz.posterior_predictive,
-            prior: arviz.prior
+            "sampler_statistics": arviz.sample_stats,
+            "observed": arviz.observed_data,
+            "posterior_trace": arviz.posterior,
+            "posterior_predictive": arviz.posterior_predictive,
+            "prior": arviz.prior
           }
         });
 
+
+    
+        $(".template-holder").append(html);
         console.log(html);
 
-        $(".template-holder").append(html);
+         // add navbar functionality
+         $("ul.nav li").each(function() {
+            console.log(this);
+            $(this).on("click", function(f){
+                // hide everything                
+                $(".hideable").each(function() {$(this).addClass("d-none")});
+                // unhide the target
+                var target = $(this).attr("data-target");
+                $("#"+target).removeClass("d-none");
+
+            });
+        });
       }
       /////////////////////////////////////////////////////////////////////////////////////
       // Entry point
@@ -194,3 +245,4 @@
     </script>
   </body>
 </html>
+
