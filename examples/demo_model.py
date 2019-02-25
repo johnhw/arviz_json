@@ -70,7 +70,8 @@ def capture_inference(model, samples=1000, chains=4, predictive=500):
         # Get posterior trace, prior trace, posterior predictive samples, and the DAG
         trace = pm.sample(samples=samples, chains=chains)
         prior = pm.sample_prior_predictive(samples=samples)
-        posterior_predictive = pm.sample_posterior_predictive(trace, predictive, model)
+        posterior_predictive = pm.sample_posterior_predictive(trace)
+        
         dag = get_dag(model)
 
     # will also capture all the sampler statistics

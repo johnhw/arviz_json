@@ -50,14 +50,14 @@ function getSample(property, vars) {
         var v = vars[i];
         samples[v] = getData(property, v)[random_index];
     }
-    return samples;
+    return {"sample":samples, "index":random_index};
 }
 
 // return a single random sample from the trace, and from the prior
 // and linearly interpolate between them according to the given factor
 function getLinearSample(a, b, vars, w) {
-    var prior_samples = getSample(a, vars);
-    var posterior_samples = getSample(b, vars);
+    var prior_samples = getSample(a, vars).sample;
+    var posterior_samples = getSample(b, vars).sample;
     var weighted_samples = {}
     for (v in posterior_samples) {
         weighted_samples[v] = (1 - w) * posterior_samples[v] + (w) * prior_samples[v];

@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Sampler stats</title>
+
+    <style>
+        .link {
+            stroke: #ccc;
+        }
+
+        .node text {
+            pointer-events: none;
+            font: 16px sans-serif;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        
+    </div>
+
+    <script src="../js/zip/zip.js"></script>
+    <script src="../js/zip/zip-ext.js"></script>
+    <script src="../js/zip/inflate.js"></script>
+    <script src="../js/npy.js"></script>
+    <script src="../js/npz.js"></script>
+    <script src="../js/jstat/jstat.min.js"></script>
+    <script src="../js/arviz.js"></script>
+    <link rel="stylesheet" type="text/css" href="model_stats.css" />
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+        crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
+
+    <script>
+        function showStats(arviz) {
+            var _html = "";
+            function appendHTML(html) {
+                html += html;
+                
+            }
+
+            function enterDiv(dclass) {
+                appendHTML('<div class=' + dclass + '>');
+            }
+
+            function leaveDiv() {
+                appendHTML('</div>');
+            }
+
+            function inDiv(dclass, html) {
+
+                enterDiv(dclass);
+                appendHTML(html);
+                leaveDiv();
+            }
+
+            function inSpan(dclass, html) {
+                appendHTML("<span class=" + dclass + ">")
+                appendHTML(html);
+                appendHTML("</span>")
+            }
+
+            appendHTML("<h1>"+"Engine"+"</h1>");
+            var sample_attrs = arviz.sample_stats.attrs;
+
+            var kvs = {
+                "Inference Library": sample_attrs.inference_library,
+                "Version": sample_attrs.inference_library_version,
+                "Date": sample_attrs.created_at,
+            };
+
+            function withDiv(dclass, callback) {
+                enterDiv(dclass);
+                callback();
+                leaveDiv();
+            }
+
+            function addKeyValues(kvs) {                
+                var tableHTML = '<table class="table">';                
+                for (k in kvs) {
+                    tableHTML+="<tr>";
+                    tableHTML+="<td>";
+                    tableHTML+=k;
+                    tableHTML+="</td>";
+                    tableHTML+="<td>";
+                    tableHTML+=kvs[k];
+                    tableHTML+="</td>";
+                    tableHTML+="</tr>";                                                            
+                }
+                tableHTML+=('</table>');                
+                appendHTML(tableHTML);                
+            }
+
+            function addKeySubValues(kvs, headers, keys) {                
+                var tableHTML = '<table class="table">';                
+
+                tableHTML+="<tr>";
+                tableHTML+="<th>Item</th>";
+                for(i=0;i<headers.length;i++)
+                {
+                    var header = headers[i];
+                    tableHTML+="<th>"+header+"</th>";                    
+                }
+                tableHTML+="</tr>";  
+                
+                for (k in kvs) {
+                    tableHTML+="<tr>";
+                    tableHTML+="<td>"+k+"</td>";                    
+                    for(i=0;i<keys.length;i++)
+                    {
+                        var key = keys[i];
+                        tableHTML+="<td>" + key(kvs[k]) + "</td>";                        
+                    }
+                    tableHTML+="</tr>";                                                            
+                }
+                tableHTML+=('</table>');                
+                appendHTML(tableHTML);                
+            }
+
+            addKeyValues(kvs);
+            addKeySubValues(sample_attrs.graph,
+             ["Type", "Parents", "Distribution", "Shape"],
+             [d=>d.type, d=>d.parents, d=>d.distribution.type,
+            d=>d.distribution.shape 
+            ])
+
+
+            
+            $(".container").append(_html);
+            console.log(_html);
+        }
+        /////////////////////////////////////////////////////////////////////////////////////
+        // Entry point        
+        load_npz("switchpoint.npz", function (npz_data) {
+            showStats(reassemble_arviz(npz_data));
+        });
+    </script>
+</body>
+
+</html>

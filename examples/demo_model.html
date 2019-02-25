@@ -193,7 +193,7 @@
 
             }
             function setPredictiveScatter(samples) {
-                d3.selectAll("#posterior_predictive").remove();
+               
 
                 
 
@@ -270,6 +270,8 @@
                     "switchpoint", "poverty_at_switchpoint"
                 ];
                 var pSample;
+                d3.selectAll("#posterior_predictive").remove();
+
                 if (useExpectation) {
                     // static mean
                     pSample = getExpectation(posterior, var_list);
@@ -278,7 +280,14 @@
                     pSample = getLinearSample(prior, posterior, var_list, priorWeight);
                 } else {
                     // plain posterior sample
-                    pSample = getSample(posterior, var_list);
+                    var sampleIndex = getSample(posterior, var_list);
+                    pSample = sampleIndex.sample;
+                    var pIndex = sampleIndex.index;
+
+                    // Note: posterior predictive **does not** match the current posterior trace sample!!!
+                    // this needs to be fixed
+                    console.log(arviz_data.posterior_predictive);
+                    setPredictiveScatter(extractColumnData(arviz_data.posterior_predictive, ["year", "y"]));
                 }
 
                 function map_line(at, slope, from, offset) {
@@ -305,9 +314,7 @@
                 // update state variables
                 updateState();
 
-                // Note: posterior predictive **does not** match the current posterior trace sample!!!
-                // this needs to be fixed
-                setPredictiveScatter(extractColumnData(arviz_data.posterior_predictive, ["year", "y"]));
+                
             }
 
             
