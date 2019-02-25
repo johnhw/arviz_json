@@ -35,7 +35,7 @@
         return escapeHtml(JSON.stringify(obj,
             function (k, v) {
                 if (!isNaN(v)) return Math.floor(v * 10) / 10.0;
-                if (v.join && v.length>6) return Array.from(v.slice(0, 6)).concat("...");
+                if (v.join && v.length>6) return Array.from(v.slice(0, 6)).concat("... ["+(v.length-6)+" more]");
                 else return v;
             }, 4));
     }
@@ -45,7 +45,15 @@
     }
     /////////////////////////////////////////////////////////////////////////////////////
     // Entry point
+
+    
+    // read zip from URL
+    
+
+    
+
     load_npz("switchpoint.npz", function (npz_data) {
+        
         showDump(reassemble_arviz(npz_data));
     });
 </script>
