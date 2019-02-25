@@ -7,53 +7,53 @@
       content="width=device-width, initial-scale=1, shrink-to-fit=no"
     />
     <title>Sampler stats</title>
-
-    <style>
-      .link {
-        stroke: #ccc;
-      }
-
-      .node text {
-        pointer-events: none;
-        font: 16px sans-serif;
-      }
-    </style>
   </head>
 
-  <body>
+  <body class="bg-light">
     <div class="template-holder"></div>
 
     <script id="entry-template" type="text/x-handlebars-template">
-      <div class="container">
-      <h1>{{title}}</h1>
-      <h2>Inference stats</h2>
+        <div class="container">
+        <div class="row">
+            <div class="col-md-2"> </div>
+                <div class="col-md-8">
+                    <h1 class="hero">{{title}}</h1>
 
-      {{!Basic statistics}}
-      <table class="table">
-          {{#each basic_attribute}}
-          <tr> <td> {{@key}} </td> <td> {{this}} </td> </tr>
-          {{/each}}
-      </table>
 
-      {{! Listing of variables in model}}
-      <h2> Model Variables </h2>
-      <table class="table">
-          <tr>{{#each variable_header}}
-              <th> {{this}} </th>
-              {{/each}}
-          </tr>
-          {{#each variable_table}}
-          <tr>
-              {{#each this}}<td>{{this}}</td>{{/each}}
-          </tr>
-          {{/each}}
-      </table>
 
-      <h2> Sample stats </h2>
-      {{#with sample_stats}}
-        {{> xarray }}
-      {{/with}}
+            <h2>Inference stats</h2>
 
+            {{!Basic statistics}}
+            <table class="table">
+                {{#each basic_attribute}}
+                <tr> <td> {{@key}} </td> <td> {{this}} </td> </tr>
+                {{/each}}
+            </table>
+
+            {{! Listing of variables in model}}
+            <h2> Model Variables </h2>
+            <table class="table">
+                <tr>{{#each variable_header}}
+                    <th> {{this}} </th>
+                    {{/each}}
+                </tr>
+                {{#each variable_table}}
+                <tr>
+                    {{#each this}}<td>{{this}}</td>{{/each}}
+                </tr>
+                {{/each}}
+            </table>
+
+            {{#each xarrays}}
+            <h2> {{@key}} </h2>
+                {{> xarray }}
+            {{/each}}
+
+
+            </div>
+            <div class="col-md-2"> </div>
+        </div>
+        
       </div>
     </script>
 
@@ -120,14 +120,16 @@
         var source = document.getElementById("entry-template").innerHTML;
         var template = Handlebars.compile(source);
 
+        // print shape of arrays nicely
         Handlebars.registerHelper("shape", function(shape) {
           return "(" + shape.join(", ") + ")";
         });
 
+        // print dtypes in a human readable form
         var dtype_names = {
           "<f8": "float64",
-          ">f4": "float32",
-          "|b1": "bool",
+          "<f4": "float32",
+          "|b1": "boolean",
           "<i8": "int64",
           "<i2": "int16",
           "<i1": "int8",
@@ -140,23 +142,23 @@
           "<u4": "uint32"
         };
 
-        Handlebars.registerHelper("dtype", function(dtype) {          
+        Handlebars.registerHelper("dtype", function(dtype) {
           return dtype_names[dtype];
         });
 
+        // template for an xarray, showing the dimensions
         Handlebars.registerPartial(
           "xarray",
           `            
-            <h4> Dimensions </h4>            
-            <table class='table'>
-                <tr> <th> Key </th> <th> Value </th> </tr>
+            <h4 class="btn btn-primary" data-toggle="collapse" data-target=".{{@key}}_dims"> Dimensions </h4>            
+            <table class="table {{@key}}_dims collapse">                
                 {{#each dims}}                
                 <tr> <td> {{@key}} </td> <td> {{this}} </td> </tr>
                 {{/each}}
             </table>            
 
-            <h4> Variables </h4>
-            <table class="table">
+            <h4 data-toggle="collapse" data-target=".{{@key}}_vars"> Variables </h4>
+            <table class="table {{@key}}_vars collapse">
                 <tr> <th> Variable </th> <th> Shape </th> <th> dtype </th> </tr>
                 {{#each vars}}                
                 <tr> <td> {{@key}} </td> <td> {{shape this.shape}} </td> <td> {{dtype this.dtype}} </tr>
@@ -169,9 +171,18 @@
           title: "Inference results",
           basic_attribute: kvs,
           variable_header: ["Name", "Type", "Parents", "Distribution", "Shape"],
+
           variable_table: variable_table,
-          sample_stats: arviz.sample_stats
+          xarrays: {
+            sample_stats: arviz.sample_stats,
+            observed: arviz.observed_data,
+            posterior: arviz.posterior,
+            posterior_predictive: arviz.posterior_predictive,
+            prior: arviz.prior
+          }
         });
+
+        console.log(html);
 
         $(".template-holder").append(html);
       }
