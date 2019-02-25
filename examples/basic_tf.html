@@ -18,7 +18,6 @@
 <script src="../js/npz.js"></script>
 <script src="../js/arviz.js"></script>
 <script src="../js/arviz_tf.js"></script>
-<script src="../js/chartjs/chartjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.15.1/dist/tf.min.js"></script>
 
 <script>
@@ -50,7 +49,7 @@
 
     
     // read zip from URL    
-    load_npz("switchpoint.npz").then(npz_data => console.log(reassemble_arviz(npz_data, tf_array)));
+    load_npz("switchpoint.npz").then(npz_data => showDump(reassemble_arviz(npz_data, tf_array)));
     
 </script>
 </body>
