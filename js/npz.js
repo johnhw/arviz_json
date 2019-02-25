@@ -22,7 +22,7 @@ function readJSONBlob(blob) {
     return promise;
 }
 
-function readNpy(blob) {
+function readNpyBlob(blob) {
     return new Promise(function (resolve, reject) {
         NumpyLoader.open(blob, function (arr) {
             resolve(arr);
@@ -76,7 +76,7 @@ function iterateZip(reader, file_callback) {
 
 function parseNpz(reader) {
     return iterateZip(reader, function (blob, filename, extension) {
-        if (extension == 'npy') return readNpy(blob);
+        if (extension == 'npy') return readNpyBlob(blob);
         if (extension == 'json') return readJSONBlob(blob);
         else return null;
     });
@@ -93,7 +93,7 @@ function load_npz(url) {
 }
 
 // load an NPZ file from an in memory blob
-function readNpzFromBlob(blob) {
+function readNpzBlob(blob) {
     var promise = new Promise(function (resolve, reject) {
         zip.createReader(new zip.BlobReader(blob), reader=>resolve(parseNpz(reader)));        
     });
@@ -101,10 +101,12 @@ function readNpzFromBlob(blob) {
 }
 
 // load multiple npz files inside a zip file
+// optionally, can be metadata as json inside the zip as well
 function loadMultiModel(url) {
     function parse_multi(reader) {
         return iterateZip(reader, function (blob, filename, extension) {
-            if (extension == 'npz') return readNpzFromBlob(blob);
+            if (extension == 'npz') return readNpzBlob(blob);
+            if (extension == 'json') return readJSONBlob(blob);
         });
     }
     return readZipWith(url, parse_multi);
