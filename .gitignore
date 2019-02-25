@@ -5,6 +5,7 @@ __pycache__/
 *.json
 
 *.npz
+*.zip
 
 js/three/
 

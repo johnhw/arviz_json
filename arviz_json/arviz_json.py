@@ -2,6 +2,7 @@ import arviz as az
 import numpy as np
 import json
 import zipfile
+from io import BytesIO
 
 def write_for_js(npz_file, header, arrays, compressed=True, verbose=False):
     """Write the data to a JSON file for loading in JS, along with
@@ -49,6 +50,37 @@ def fix_dtype(data):
             f"Data type {current_dtype} is not supported. Define a conversion in fix_dtype() if necessary."
         )
     return arr
+
+def multi_arviz_to_json(models, output, compressed=True):
+    """
+        Take a mapping of {name:InferenceData objects}, and write all of the
+        corresponding models into a single ZIP file with the given name.
+
+        Filenames should be specified in the mapping without the npz suffix.
+        For example:
+
+            {
+                "model_linear" : model_linear,
+                "model_quadratic" : model_quadratic
+            }
+
+        Each model will be an `npz` file exactly as written by `arviz_to_json`
+    """
+    z = zipfile.ZipFile(output, "w")
+
+    # select compression flag
+    if compressed:
+        zip_mode = zipfile.ZIP_DEFLATED
+    else:
+        zip_mode = zipfile.ZIP_STORED
+
+    # write each npz file into memory, then compress into a single zip file
+    for name, model in models.items():
+        f = BytesIO()
+        arviz_to_json(model, f)
+        z.writestr(name+".npz", f.getvalue())
+
+    z.close()
 
 
 def arviz_to_json(inference_data, output_name):
@@ -109,9 +141,3 @@ def arviz_to_json(inference_data, output_name):
     write_for_js(output_name, array_headers, arrays)
 
 
-if __name__ == "__main__":
-    # test with the centered_eight dataset
-    import arviz as az
-
-    data = az.load_arviz_data("centered_eight")
-    arviz_to_json(data, "centered_eight.npz")

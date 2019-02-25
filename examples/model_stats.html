@@ -13,6 +13,12 @@
     <div class="template-holder"></div>
 
     <script id="entry-template" type="text/x-handlebars-template">
+
+        {{!-- 
+            The template for the web page. Content is dynamically filled in by the 
+            script for each section.
+        --}}
+
         <div class="container-fluid">
         <div class="row">
                 <div class="jumbotron col-md-12"> <h4> ARViz Inference Data Viewer </h4> </div>
@@ -20,23 +26,24 @@
 
         <div class="row">
             {{!Navigation bar on the side panel}}
-            <nav class="col-md-3 sidebar d-none d-md-block bg-light"> 
+            <nav class="col-md-3 sidebar d-none d-md-block bg-light">
                     <div class="sidebar-sticky">
                     <ul class="nav flex-column">
-                        <li class="nav-item" data-target="basic_stats"> <a class="nav-link active" href='#'>Basic attributes </a></li> 
-                        <li class="nav-item" data-target="model_variables"> <a class="nav-link" href='#'>Model Variables</a></li> 
-                        <li class="nav-item" data-target="sampler_statistics"> <a class="nav-link" href='#'>Sampler Statistics </a></li> 
-                        <li class="nav-item" data-target="observed"> <a class="nav-link" href='#'>Sampler Observations</a></li> 
-                        <li class="nav-item" data-target="posterior_trace"> <a class="nav-link" href='#'>Posterior Trace </a></li> 
-                        <li class="nav-item" data-target="posterior_predictive"> <a class="nav-link" href='#'>Posterior Predictive </a></li> 
-                        <li class="nav-item"data-target="prior"> <a class="nav-link" href='#'>Prior</a></li>             
+                        <li class="nav-item" data-target="basic_stats"> <a class="nav-link active" href='#'>Basic attributes </a></li>
+                        <li class="nav-item" data-target="model_variables"> <a class="nav-link" href='#'>Model Variables</a></li>
+                        <li class="nav-item" data-target="sampler_statistics"> <a class="nav-link" href='#'>Sampler Statistics </a></li>
+                        <li class="nav-item" data-target="observed"> <a class="nav-link" href='#'>Sampler Observations</a></li>
+                        <li class="nav-item" data-target="posterior_trace"> <a class="nav-link" href='#'>Posterior Trace </a></li>
+                        <li class="nav-item" data-target="posterior_predictive"> <a class="nav-link" href='#'>Posterior Predictive </a></li>
+                        <li class="nav-item"data-target="prior"> <a class="nav-link" href='#'>Prior</a></li>
                     </ul>
                     </div>
                 </nav>
-            
+
 
             <div class="col-md-8">
-                       
+
+            
             <div class="hideable" id="basic_stats">
                 <h2> Basic attributes </h2>
                 {{!Basic attributes}}
@@ -48,23 +55,26 @@
             </div>
 
             {{! Listing of variables in model}}
-            <div class="d-none hideable" id="model_variables">
-                <h2> Model Variables </h2>
-                <table class="table table-striped table-hover">
-                    <thead class="thead-dark">
-                        <tr>{{#each variable_header}}
-                            <th> {{this}} </th>
-                            {{/each}}
-                        </tr>
-                    </thead>
+            {{#if variable_table}}
+                <div class="d-none hideable" id="model_variables">
+                    <h2> Model Variables </h2>
+                
+                    <table class="table table-striped table-hover">
+                        <thead class="thead-dark">
+                            <tr>{{#each variable_header}}
+                                <th> {{this}} </th>
+                                {{/each}}
+                            </tr>
+                        </thead>
 
-                    {{#each variable_table}}
-                    <tr>
-                        {{#each this}}<td>{{this}}</td>{{/each}}
-                    </tr>
-                    {{/each}}
-                </table>
-            </div>
+                        {{#each variable_table}}
+                        <tr>
+                            {{#each this}}<td>{{this}}</td>{{/each}}
+                        </tr>
+                        {{/each}}
+                    </table>
+                </div>
+            {{/if}}
 
             {{!Each of the XArray objects}}
             {{#each xarrays}}
@@ -73,11 +83,11 @@
                 {{> xarray }}
             </div>
             {{/each}}
-            
+
             </div>
             <div class="col-md-2"> </div>
         </div>
-        
+
       </div>
     </script>
 
@@ -90,6 +100,11 @@
     <script src="../js/handlebars/handlebars-v4.1.0.js"></script>
     <script src="../js/jstat/jstat.min.js"></script>
     <script src="../js/arviz.js"></script>
+    <script src="../js/chartjs/chartjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.15.1/dist/tf.min.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://unpkg.com/d3-dag@0.2.3"></script>
+
     <link rel="stylesheet" type="text/css" href="model_stats.css" />
     <!-- Bootstrap CSS -->
     <link
@@ -114,9 +129,11 @@
       crossorigin="anonymous"
     ></script>
 
+    
+
     <script>
       function showStats(arviz) {
-        var sample_attrs = arviz.sample_stats.attrs;
+        var sample_attrs = arviz.sample_stats.attrs;        
 
         var kvs = {
           "Inference Library": sample_attrs.inference_library,
@@ -132,16 +149,16 @@
           }
           return table;
         }
-
-        var variable_table = createTable(sample_attrs.graph, [
-          d => d.type,
-          d => d.parents.join(", "),
-          d => d.distribution.type,
-          d => d.distribution.shape
-        ]);
-
-       
-
+        
+        if(sample_attrs.graph)
+        {
+            var variable_table = createTable(sample_attrs.graph, [
+            d => d.type,
+            d => d.parents.join(", "),
+            d => d.distribution.type,
+            d => d.distribution.shape
+            ]);
+        }
 
         var source = document.getElementById("entry-template").innerHTML;
         var template = Handlebars.compile(source);
@@ -150,7 +167,6 @@
         Handlebars.registerHelper("shape", function(shape) {
           return "(" + shape.join(", ") + ")";
         });
-
 
         // print dtypes in a human readable form
         var dtype_names = {
@@ -173,24 +189,25 @@
           return dtype_names[dtype];
         });
 
+        // show title cased, deslugified titles
         Handlebars.registerHelper("title", function(title) {
-            return title.charAt(0).toUpperCase() + title.slice(1).replace("_", " ");
-          });
+          return (
+            title.charAt(0).toUpperCase() + title.slice(1).replace("_", " ")
+          );
+        });
 
+        // show shortened version of long arrays
         Handlebars.registerHelper("elide", function(seq) {
-            if(seq.length>6)
-            {
-                return seq.slice(0,3).join(", ") + ", ..., "+ seq.slice(-3).join(", ");
-            }
-            else
-                return seq.join(", ");
-            
-          });
-
+          if (seq.length > 6) {
+            return (
+              seq.slice(0, 3).join(", ") + ", ..., " + seq.slice(-3).join(", ")
+            );
+          } else return seq.join(", ");
+        });
 
         console.log(arviz);
-  
-        // template for an xarray, showing the dimensions
+
+        // template for an xarray, showing the dimensions, coords and vars
         Handlebars.registerPartial(
           "xarray",
           `            
@@ -207,7 +224,7 @@
                 </table>            
             --}}
             
-            {{!-- Variables; where the real meat is }}
+            {{!-- Variables; where the real meat is --}}
             <table class="table table-striped table-hover">
                 <thead class="thead-dark">
                 <tr> <th> Variable </th> <th> Shape </th> <th> dtype </th> </tr>
@@ -217,7 +234,8 @@
                 {{/each}}
             </table>
 
-            {{!-- Coordinates }}
+
+            {{!-- Coordinates --}}
 
             {{!--
                 <table class="table table-striped table-hover">
@@ -228,7 +246,7 @@
                         <tr> <td> {{@key}} </td> <td> {{elide this}} </td> </tr>
                         {{/each}}
                     </table>
-            }}
+            --}}
 
           `
         );
@@ -240,31 +258,29 @@
 
           variable_table: variable_table,
           xarrays: {
-            "sampler_statistics": arviz.sample_stats,
-            "observed": arviz.observed_data,
-            "posterior_trace": arviz.posterior,
-            "posterior_predictive": arviz.posterior_predictive,
-            "prior": arviz.prior
+            sampler_statistics: arviz.sample_stats,
+            observed: arviz.observed_data,
+            posterior_trace: arviz.posterior,
+            posterior_predictive: arviz.posterior_predictive,
+            prior: arviz.prior
           }
         });
 
-
-    
         $(".template-holder").append(html);
         console.log(html);
 
-         // add navbar functionality
-         // hide all sections but the clicked one
-         $("ul.nav li").each(function() {
-            console.log(this);
-            $(this).on("click", function(f){
-                // hide everything                
-                $(".hideable").each(function() {$(this).addClass("d-none")});
-                // unhide the target
-                var target = $(this).attr("data-target");
-                $("#"+target).removeClass("d-none");
-
+        // add navbar functionality
+        // hide all sections but the clicked one
+        $("ul.nav li").each(function() {          
+          $(this).on("click", function(f) {
+            // hide everything
+            $(".hideable").each(function() {
+              $(this).addClass("d-none");
             });
+            // unhide the target
+            var target = $(this).attr("data-target");
+            $("#" + target).removeClass("d-none");
+          });
         });
       }
       /////////////////////////////////////////////////////////////////////////////////////
@@ -275,4 +291,3 @@
     </script>
   </body>
 </html>
-
