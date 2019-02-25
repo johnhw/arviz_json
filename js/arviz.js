@@ -20,6 +20,17 @@ function reassemble_arviz(npz_block, array_transformer) {
     return inference_data;
 }
 
+// apply arviz reconstuction to multiple models
+function reassembleMultiModel(models, array_transformer)
+{
+    var arviz_models = {};
+    for(k in models)
+    {
+        var fname_no_npz = k.slice(0,-4);
+        arviz_models[fname_no_npz] = reassemble_arviz(models[k], array_transformer);
+    }
+    return arviz_models;
+}
 
 function getData(property, varname) {
 

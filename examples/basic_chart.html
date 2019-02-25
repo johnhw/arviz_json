@@ -10,7 +10,6 @@
 <body id="body">
 
 </body>
-
 <script src="../js/zip/zip.js"></script>
 <script src="../js/zip/zip-ext.js"></script>
 <script src="../js/zip/inflate.js"></script>
@@ -44,9 +43,9 @@
 
 </script>
 <script>
+    // convert [a,b,c] to [{x:1, a}, {x:2, b}, ...] etc.
     function chartFormat(xy) {
         var xyChart = [];
-
         for (var i = 0; i < xy.length; i++) {
             xyChart.push({
                 "x": i,
@@ -68,11 +67,9 @@
             traces.push(trace.bufferSync().values);
         }
 
-
+        // Generate the chart
         var ctx = document.getElementById("traceChart").getContext('2d');
-
         var colors = ["#E494A6", "#53A49B", "#3B61CB", "#22172E"];
-
         var myChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -112,6 +109,7 @@
             }
         });
     }
+
     /////////////////////////////////////////////////////////////////////////////////////
     // Entry point
 

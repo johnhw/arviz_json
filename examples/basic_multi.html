@@ -48,9 +48,8 @@
 
     
     // read zip from URL    
-    loadMultiModel("multimodel.zip").then(npz_data => console.log(npz_data));
-    
-    //load_npz("switchpoint.npz").then(npz_data => showDump(reassemble_arviz(npz_data)));
+    loadMultiModel("multimodel.zip").then(multiModel => showDump(reassembleMultiModel(multiModel)));
+        
     
 </script>
 </body>

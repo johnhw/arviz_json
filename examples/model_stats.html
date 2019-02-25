@@ -285,9 +285,7 @@
       }
       /////////////////////////////////////////////////////////////////////////////////////
       // Entry point
-      load_npz("switchpoint.npz", function(npz_data) {
-        showStats(reassemble_arviz(npz_data));
-      });
+      load_npz("switchpoint.npz").then(npz_data => showStats(reassemble_arviz(npz_data)));         
     </script>
   </body>
 </html>
