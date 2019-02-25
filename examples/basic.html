@@ -47,15 +47,9 @@
     // Entry point
 
     
-    // read zip from URL
+    // read zip from URL    
+    load_npz("switchpoint.npz").then(npz_data => showDump(reassemble_arviz(npz_data)));
     
-
-    
-
-    load_npz("switchpoint.npz", function (npz_data) {
-        
-        showDump(reassemble_arviz(npz_data));
-    });
 </script>
 </body>
 

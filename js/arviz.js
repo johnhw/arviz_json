@@ -1,19 +1,22 @@
 // functions for manipulating ARViz data
 
-// put the arrays back into the places they came from, inside th
-// data structure itself
-function reassemble_arviz(npz_block) {
-
-    var inference_data = npz_block.json.header.inference_data;
-    var arrays = npz_block.arrays;
+// put the arrays back into the places they came from, inside the
+// data structure itself. Optionally, allow each array to be
+// transformed before inserting it into the data structure
+// (e.g. to automaticaly tf.js each entry)
+function reassemble_arviz(npz_block, array_transformer) {
+    var transformer = array_transformer || (x=>x);
+    var inference_data = npz_block["header.json"].inference_data;        
     for (k in inference_data) {
-        vars = inference_data[k].vars;
+        vars = inference_data[k].vars;        
         // extract arrays
         for (v in vars) {
             var var_v = vars[v];
-            var_v.array = arrays[var_v.array_name];
+            // lookup the array block
+            var array_fname = var_v.array_name+".npy";            
+            var_v.array = transformer(npz_block[array_fname]);
         }
-    }
+    }    
     return inference_data;
 }
 
