@@ -3,7 +3,7 @@ import pandas as pd
 import theano.tensor as tt
 import arviz as az
 import pymc3 as pm
-from arviz_json import arviz_to_json, get_dag
+from arviz_json import arviz_to_json, get_dag, multi_arviz_to_json
 from io import StringIO
 
 def load_data():
@@ -84,9 +84,17 @@ def capture_inference(model, samples=1000, chains=4, predictive=500):
     return data
     
 if __name__=="__main__":
+    # generate a single switchpoint model
     poverty = load_data()
     model = define_model(poverty)
-    dag = get_dag(model)
-    print(dag)
-    #data = capture_inference(model)
-    #arviz_to_json(data, "switchpoint.npz")
+    dag = get_dag(model)    
+    data = capture_inference(model)
+    arviz_to_json(data, "switchpoint.npz")
+
+    # generate multiple models
+    models = {
+        "centered": az.load_arviz_data("centered_eight"),
+        "noncentered": az.load_arviz_data("non_centered_eight"),
+    }
+    multi_arviz_to_json(models, "multimodel.zip")
+
