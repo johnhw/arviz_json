@@ -1,6 +1,5 @@
 import numpy as np 
 
-
 array_1 = np.zeros((5,5))
 array_2 = np.zeros((3,30), dtype=np.int32)
 array_3 = np.ones((300), dtype=np.float32)
