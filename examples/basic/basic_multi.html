@@ -11,14 +11,13 @@
 
 </body>
 
-<script src="../js/zip/zip.js"></script>
-<script src="../js/zip/zip-ext.js"></script>
-<script src="../js/zip/inflate.js"></script>
-<script src="../js/npy.js"></script>
-<script src="../js/npz.js"></script>
-<script src="../js/arviz.js"></script>
-<script src="../js/arviz_tf.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.15.1/dist/tf.min.js"></script>
+<script src="../../js/zip/zip.js"></script>
+<script src="../../js/zip/zip-ext.js"></script>
+<script src="../../js/zip/inflate.js"></script>
+<script src="../../js/npy.js"></script>
+<script src="../../js/npz.js"></script>
+<script src="../../js/arviz.js"></script>
+
 
 <script>
     //https://stackoverflow.com/questions/6234773/can-i-escape-html-special-chars-in-javascript
@@ -49,7 +48,8 @@
 
     
     // read zip from URL    
-    load_npz("switchpoint.npz").then(npz_data => showDump(reassemble_arviz(npz_data, tf_array)));
+    loadMultiModel("multimodel.zip").then(multiModel => showDump(reassembleMultiModel(multiModel)));
+        
     
 </script>
 </body>

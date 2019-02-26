@@ -26,9 +26,10 @@
 
         <div class="row">
             {{!Navigation bar on the side panel}}
-            <nav class="col-md-3 sidebar d-none d-md-block bg-light">
-                    <div class="sidebar-sticky">
-                    <ul class="nav flex-column">
+            <div class="sidebar">
+            <nav class="col-md-3 sidebar-nav">
+                    
+                    <ul class="nav flex-column  ">
                         <li class="nav-item" data-target="basic_stats"> <a class="nav-link active" href='#'>Basic attributes </a></li>
                         <li class="nav-item" data-target="model_variables"> <a class="nav-link" href='#'>Model Variables</a></li>
                         <li class="nav-item" data-target="sampler_statistics"> <a class="nav-link" href='#'>Sampler Statistics </a></li>
@@ -37,8 +38,9 @@
                         <li class="nav-item" data-target="posterior_predictive"> <a class="nav-link" href='#'>Posterior Predictive </a></li>
                         <li class="nav-item"data-target="prior"> <a class="nav-link" href='#'>Prior</a></li>
                     </ul>
-                    </div>
+                    
                 </nav>
+            </div>
 
 
             <div class="col-md-8">
@@ -91,21 +93,21 @@
       </div>
     </script>
 
-    <script src="../js/zip/zip.js"></script>
-    <script src="../js/zip/zip-ext.js"></script>
-    <script src="../js/zip/inflate.js"></script>
-    <script src="../js/underscore/underscore-min.js"></script>
-    <script src="../js/npy.js"></script>
-    <script src="../js/npz.js"></script>
-    <script src="../js/handlebars/handlebars-v4.1.0.js"></script>
-    <script src="../js/jstat/jstat.min.js"></script>
-    <script src="../js/arviz.js"></script>
-    <script src="../js/chartjs/chartjs.min.js"></script>
+    <script src="../../js/zip/zip.js"></script>
+    <script src="../../js/zip/zip-ext.js"></script>
+    <script src="../../js/zip/inflate.js"></script>
+    <script src="../../js/underscore/underscore-min.js"></script>
+    <script src="../../js/npy.js"></script>
+    <script src="../../js/npz.js"></script>
+    <script src="../../js/handlebars/handlebars-v4.1.0.js"></script>
+    <script src="../../js/jstat/jstat.min.js"></script>
+    <script src="../../js/arviz.js"></script>
+    <script src="../../js/chartjs/chartjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.15.1/dist/tf.min.js"></script>
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <script src="https://unpkg.com/d3-dag@0.2.3"></script>
 
-    <link rel="stylesheet" type="text/css" href="model_stats.css" />
+    
     <!-- Bootstrap CSS -->
     <link
       rel="stylesheet"
@@ -129,7 +131,7 @@
       crossorigin="anonymous"
     ></script>
 
-    
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
 
     <script>
       function showStats(arviz) {

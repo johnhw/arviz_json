@@ -1,6 +1,7 @@
 import pymc3 as pm
 from pprint import pprint
-from arviz_json import arviz_to_json
+from arviz_json import arviz_to_json, pymc3_graph
+
 
 def describe_distribution(d):
     """
@@ -42,6 +43,7 @@ def get_dag(model):
     variables = model.named_vars
 
     # get the DAG for this model
+    #graph = pm.model_graph.ModelGraph(model)
     graph = pm.model_graph.ModelGraph(model)
     dag = graph.make_compute_graph()
     dag = {k: list(v) for k, v in dag.items()}

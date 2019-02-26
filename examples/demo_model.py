@@ -86,5 +86,7 @@ def capture_inference(model, samples=1000, chains=4, predictive=500):
 if __name__=="__main__":
     poverty = load_data()
     model = define_model(poverty)
-    data = capture_inference(model)
-    arviz_to_json(data, "switchpoint.npz")
+    dag = get_dag(model)
+    print(dag)
+    #data = capture_inference(model)
+    #arviz_to_json(data, "switchpoint.npz")

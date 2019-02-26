@@ -20,18 +20,31 @@ function reassemble_arviz(npz_block, array_transformer) {
     return inference_data;
 }
 
+function endsWith(s, tail)
+{
+    return (s.length >= tail.length && s.slice(-tail.length)===tail);
+}
+
 // apply arviz reconstuction to multiple models
+// model comes as a single zip with `model_name.npz` files inside
+// one per model. Potentially also metadata information as JSON blocks, but this
+// is not used at the moment
 function reassembleMultiModel(models, array_transformer)
 {
     var arviz_models = {};
     for(k in models)
     {
-        var fname_no_npz = k.slice(0,-4);
-        arviz_models[fname_no_npz] = reassemble_arviz(models[k], array_transformer);
+        if(endsWith(k, 'npz'))
+        {
+            var fname_no_npz = k.slice(0,-4); // remove trailing .npz from filename
+            arviz_models[fname_no_npz] = reassemble_arviz(models[k], array_transformer);
+        }
     }
     return arviz_models;
 }
 
+// return the raw data of an array given a variable name and
+// a property block; e.g. posterior and "y"
 function getData(property, varname) {
 
     return property.vars[varname].array.data;
