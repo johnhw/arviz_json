@@ -12,6 +12,10 @@ js/three/
 # C extensions
 *.so
 
+dist/
+
+node_modules/
+
 # Distribution / packaging
 .Python
 build/
