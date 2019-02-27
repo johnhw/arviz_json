@@ -1,11 +1,10 @@
 # arviz_json
-Exports [ARViz](https://arviz-devs.github.io/arviz/) [`InferenceData`](https://arviz-devs.github.io/arviz/notebooks/XarrayforArviZ.html) to JSON + binary npy arrays for client-side use. Intended to make it possible to access the outputs of Bayesian inference in interactive JS applications in the browser. This packages up the data in the NetCDF block into a zip file containing JSON
-metadata, and a collection of `npy` format arrays. A loader to unpack this format in JavaScript is provided.
+Exports [ARViz](https://arviz-devs.github.io/arviz/) [`InferenceData`](https://arviz-devs.github.io/arviz/notebooks/XarrayforArviZ.html) to JSON + binary npy arrays for client-side use. Intended to make it possible to access the outputs of Bayesian inference in interactive JS applications in the browser. This packages up the data in the NetCDF/xarray block into a zip file containing JSON metadata, and a collection of `npy` format arrays. A loader to unpack this format in JavaScript is provided.
 
 Multiple models can be packed into a single zip file using `multi_arviz_to_json()` which can be conveniently loaded in the browser.
 
 ## DAG extraction
-The module includes functionality to extract a very basic skeleton of the DAG from [PyMC3](https://docs.pymc.io/), giving the parents of each variable and basic information about dimension and distribution type, and can package this alongside the model.
+The module also includes functionality to extract a very basic skeleton of the DAG from [PyMC3](https://docs.pymc.io/), giving the parents of each variable and basic information about dimension and distribution type, and can package this alongside the model.
 
 ## Example
 
