@@ -32,6 +32,7 @@ function endsWith(s, tail)
 function reassembleMultiModel(models, array_transformer)
 {
     var arviz_models = {};
+    var meta_data = {};
     for(k in models)
     {
         if(endsWith(k, 'npz'))
@@ -39,8 +40,14 @@ function reassembleMultiModel(models, array_transformer)
             var fname_no_npz = k.slice(0,-4); // remove trailing .npz from filename
             arviz_models[fname_no_npz] = reassemble_arviz(models[k], array_transformer);
         }
+        if(endsWith(k, 'json'))
+        {
+            var fname_no_json = k.slice(0,-5); // remove trailing .npz from filename
+            meta_data[fname_no_json] = JSON.parse(models[k]);
+        }
     }
-    return arviz_models;
+    return {"models":arviz_models, 
+            "meta_data":meta_data};
 }
 
 // return the raw data of an array given a variable name and
