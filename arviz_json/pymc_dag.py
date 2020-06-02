@@ -1,18 +1,16 @@
 import pymc3 as pm
 from pprint import pprint
 from arviz_json import arviz_to_json, pymc3_graph
-import inspect # added
 
 def describe_distribution(d):
     """
     Takes a PyMC3 distribution object and returns a dictionary describing it.
     {
-        "type": the type of the variable, e.g. "Normal"
+        "dist": the dist name of the variable, e.g. "Normal"
+        "type": the type of the variable, e.g. "Continuous"
         "shape": the array shape of the variable, e.g. (200,) or () for a scalar
     }
     """
-    #params = list( set( inspect.getfullargspec(d.__class__.__init__).args ) - {'self', 'dist', 'transform'} ) # added
-    #values= [getattr(d,p).value.tolist() for p in params if getattr(d,p).__class__.__name__.endswith("TensorConstant")] # added
     cls=[c.__name__ for c in d.__class__.__mro__]
     if "Discrete" in cls:
         typ="Discrete"

@@ -116,12 +116,9 @@ def arviz_to_json(inference_data, output_name):
     array_index = 0
     arrays = {}
     array_headers = {}
-    
-    print(inference_data._groups)
 
     for group_name in arviz_groups:
         if group_name in inference_data._groups:
-            print(group_name)
             group = inference_data.__getattribute__(group_name)
             header = {
                 "attrs": dict(group.attrs),
