@@ -2,19 +2,27 @@ import pymc3 as pm
 from pprint import pprint
 from arviz_json import arviz_to_json, pymc3_graph
 
-
 def describe_distribution(d):
     """
     Takes a PyMC3 distribution object and returns a dictionary describing it.
     {
-        "type": the type of the variable, e.g. "Normal"
+        "dist": the dist name of the variable, e.g. "Normal"
+        "type": the type of the variable, e.g. "Continuous"
         "shape": the array shape of the variable, e.g. (200,) or () for a scalar
     }
     """
+    cls=[c.__name__ for c in d.__class__.__mro__]
+    if "Discrete" in cls:
+        typ="Discrete"
+    elif "Continuous" in cls:
+        typ="Continuous"
+    else:
+        typ=""
+    return {"dist": d.__class__.__name__, "type": typ, "shape": list(map(int, list(d.shape)))}  # distribution
+    #return {"type": d.__class__.__name__, "shape":  list(d.shape), "params": params, "param_values": values} # distribution # added
 
-    return {"type": d.__class__.__name__, "shape": list(d.shape)}  # distribution
 
-def get_dag(model):
+def get_dag(model,dims={},coords={}):
     """
     Return a description of the DAG of a PyMC3 model as a dictionary, 
     using the model_graph module to get the graph, and interrogating 
@@ -24,6 +32,9 @@ def get_dag(model):
     Parameters:
     -----------
         model:          The model to extract the graph from
+        dims            Dict of {str: list of str}: Map of variable names to the coordinate names to use to index its dimensions.
+        coords:         Dict of {str: array-like}: Map of coordinate names to coordinate values
+        
 
     Returns:
     --------
@@ -52,6 +63,8 @@ def get_dag(model):
     for k, v in variables.items():
         vtype = "unknown"
         size = 0
+        vdims = []
+        vcoords = {}
         data_shape = ()
 
         descriptor = {}
@@ -60,15 +73,24 @@ def get_dag(model):
         if v in model.free_RVs:
             vtype = "free"
             size = v.dsize
-        if v in model.observed_RVs:
+        elif v in model.observed_RVs:
             vtype = "observed"
-        if v in model.deterministics:
+        elif v in model.deterministics:
             vtype = "deterministic"
-        if v in model.potentials:
+        elif v in model.potentials:
             vtype = "potential"
-        if v in model.missing_values:
+        elif v in model.missing_values:
             vtype = "imputation"
+        else:
+            continue
 
+        # if variable has an indexing dimension, get the indexing dimension and the coords
+        if v.name in dims:
+            vdims = list(dims[v.name])
+            for dim in vdims:
+                if dim in coords:
+                    vcoords[dim] = list(map(str, list(coords[dim])))
+            
         # if the variable is a distribution, describe the distribution
         if hasattr(v, "distribution"):
             distribution = describe_distribution(v.distribution)
@@ -79,7 +101,9 @@ def get_dag(model):
             "name": v.name,
             "type": vtype,
             "parents": dag.get(k, []),
-            "size": size,
+            "size": int(size),
+            "dims": vdims,
+            "coords": vcoords,
             "distribution": distribution,
         }
     return variable_descriptor
