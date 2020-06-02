@@ -104,39 +104,48 @@ def arviz_to_json(inference_data, output_name):
     arviz_groups = [
         "observed_data",
         "posterior",
-        "posterior_predictive",
+        "posterior_predictive",		
         "prior",
+		"prior_predictive",
         "sample_stats",
+        "log_likelihood",
+        "constant_data",
+        "predictions",
+        "predictions_constant_data",
     ]
     array_index = 0
     arrays = {}
     array_headers = {}
+    
+    print(inference_data._groups)
 
     for group_name in arviz_groups:
-        group = inference_data.__getattribute__(group_name)
-        header = {
-            "attrs": dict(group.attrs),
-            "dims": dict(group.dims),
-            "coords": {k: [i.item() for i in v] for k, v in group.coords.items()},
-            "vars": {},
-            "array_names":{}
-        }
-        for var, var_data in group.data_vars.items():
-            # ensure each array has a unique filename
-            array_name = f"{group_name}_{var}_{array_index}"
-            array_index += 1
-            # store the header for this array,
-            header["vars"][var] = {
-                "dims": list(var_data.dims),
-                "attrs": dict(var_data.attrs),
-                "dtype": var_data.data.dtype.str,  # *Original* dtype, in case we are forced to convert
-                "shape": var_data.data.shape,
-                "array_name": array_name,
+        if group_name in inference_data._groups:
+            print(group_name)
+            group = inference_data.__getattribute__(group_name)
+            header = {
+                "attrs": dict(group.attrs),
+                "dims": dict(group.dims),
+                "coords": {k: [i.item() for i in v] for k, v in group.coords.items()},
+                "vars": {},
+                "array_names":{}
             }
-            arrays[array_name] = fix_dtype(var_data.data)
-            header["array_names"][var] = array_name
+            for var, var_data in group.data_vars.items():
+                # ensure each array has a unique filename
+                array_name = f"{group_name}_{var}_{array_index}"
+                array_index += 1
+                # store the header for this array,
+                header["vars"][var] = {
+                    "dims": list(var_data.dims),
+                    "attrs": dict(var_data.attrs),
+                    "dtype": var_data.data.dtype.str,  # *Original* dtype, in case we are forced to convert
+                    "shape": var_data.data.shape,
+                    "array_name": array_name,
+                }
+                arrays[array_name] = fix_dtype(var_data.data)
+                header["array_names"][var] = array_name
 
-        array_headers[group_name] = header
+            array_headers[group_name] = header
 
     write_for_js(output_name, array_headers, arrays)
 
