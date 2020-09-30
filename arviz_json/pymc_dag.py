@@ -1,5 +1,4 @@
 import pymc3 as pm
-from pprint import pprint
 from arviz_json import arviz_to_json, pymc3_graph
 
 def describe_distribution(d):
@@ -22,7 +21,7 @@ def describe_distribution(d):
     #return {"type": d.__class__.__name__, "shape":  list(d.shape), "params": params, "param_values": values} # distribution # added
 
 
-def get_dag(model,dims={},coords={}):
+def get_dag(model):
     """
     Return a description of the DAG of a PyMC3 model as a dictionary, 
     using the model_graph module to get the graph, and interrogating 
@@ -54,7 +53,6 @@ def get_dag(model,dims={},coords={}):
     variables = model.named_vars
 
     # get the DAG for this model
-    #graph = pm.model_graph.ModelGraph(model)
     graph = pm.model_graph.ModelGraph(model)
     dag = graph.make_compute_graph()
     dag = {k: list(v) for k, v in dag.items()}
@@ -63,12 +61,6 @@ def get_dag(model,dims={},coords={}):
     for k, v in variables.items():
         vtype = "unknown"
         size = 0
-        vdims = []
-        vcoords = {}
-        data_shape = ()
-
-        descriptor = {}
-
         # get the type of the variable
         if v in model.free_RVs:
             vtype = "free"
@@ -84,12 +76,15 @@ def get_dag(model,dims={},coords={}):
         else:
             continue
 
-        # if variable has an indexing dimension, get the indexing dimension and the coords
-        if v.name in dims:
-            vdims = list(dims[v.name])
+        # if variable has an indexing dimension, 
+        # get the indexing dimension and the coords
+        vdims = []
+        vcoords = {}
+        if v.name in model.RV_dims:
+            vdims = list(model.RV_dims[v.name])
             for dim in vdims:
-                if dim in coords:
-                    vcoords[dim] = list(map(str, list(coords[dim])))
+                if dim in model.coords:
+                    vcoords[dim] = list(map(str, list(model.coords[dim])))
             
         # if the variable is a distribution, describe the distribution
         if hasattr(v, "distribution"):
